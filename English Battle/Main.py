@@ -17,7 +17,6 @@ character = Hero(50, 50)
 level = Level(DEFAULT_WINDOW_SIZE)
 
 
-# Spawnea zombies en posiciones válidas
 def get_valid_spawn(lvl: Level, window_size: tuple[int, int]) -> tuple[
   int, int]:
   """Generates a valid spawn position."""
@@ -43,6 +42,7 @@ clock = pygame.time.Clock()
 # Para controlar el movimiento aleatorio de los zombies
 ZOMBIE_MOVE_INTERVAL = 10  # frames
 zombie_move_counter = 0
+attack_pressed = False  # Para detectar pulsación de la tecla
 
 while repeat:
   for event in pygame.event.get():
@@ -68,22 +68,71 @@ while repeat:
   character.move(dx, dy, moving, DEFAULT_WINDOW_SIZE[0], DEFAULT_WINDOW_SIZE[1],
                  level=level, other_characters=zombies)
 
+  # Ataque del héroe solo si se presiona la tecla "x" (no sostenida)
+  if keys[pygame.K_x]:
+    if not attack_pressed:
+      target = None
+      min_dist = float('inf')
+      for zombie in zombies:
+        if not zombie.dead:
+          # Calcula distancia al centro
+          hero_center = (
+            character.x + 23 // 2,
+            character.y + 30 // 2
+          )
+          zombie_center = (
+            zombie.x + 23 // 2,
+            zombie.y + 30 // 2
+          )
+          dist = ((hero_center[0] - zombie_center[0]) ** 2 +
+                  (hero_center[1] - zombie_center[1]) ** 2) ** 0.5
+          if dist <= character.attack_range and dist < min_dist:
+            target = zombie
+            min_dist = dist
+      if target:
+        character.attack(target)
+      else:
+        closest = None
+        min_dist = float('inf')
+        for zombie in zombies:
+          if not zombie.dead:
+            hero_center = (
+              character.x + 23 // 2,
+              character.y + 30 // 2
+            )
+            zombie_center = (
+              zombie.x + 23 // 2,
+              zombie.y + 30 // 2
+            )
+            dist = ((hero_center[0] - zombie_center[0]) ** 2 +
+                    (hero_center[1] - zombie_center[1]) ** 2) ** 0.5
+            if dist < min_dist:
+              closest = zombie
+              min_dist = dist
+        if closest:
+          character.attack(closest)
+      attack_pressed = True
+  else:
+    attack_pressed = False
+
   # Movimiento aleatorio de zombies cada cierto intervalo
-  zombie_move_counter += 1
-  if zombie_move_counter >= ZOMBIE_MOVE_INTERVAL:
-    for zombie in zombies:
-      zdx, zdy = 0, 0
-      # Elige una dirección aleatoria (pero no diagonal)
-      direction = random.choice([(1, 0), (-1, 0), (0, 1), (0, -1), (0, 0)])
-      zdx, zdy = direction
-      # Solo mueve si hay dirección
-      if zdx != 0 or zdy != 0:
-        # Los zombies consideran al héroe y a los otros zombies para colisión
-        other_chars = [character] + [z for z in zombies if z is not zombie]
-        zombie.move(zdx, zdy, True, DEFAULT_WINDOW_SIZE[0],
-                    DEFAULT_WINDOW_SIZE[1], level=level,
-                    other_characters=other_chars)
-    zombie_move_counter = 0
+  # zombie_move_counter += 1
+  # if zombie_move_counter >= ZOMBIE_MOVE_INTERVAL:
+  #   for zombie in zombies:
+  #     if zombie.dead:
+  #       continue
+  #     zdx, zdy = 0, 0
+  #     direction = random.choice([(1, 0), (-1, 0), (0, 1), (0, -1), (0, 0)])
+  #     zdx, zdy = direction
+  #     if zdx != 0 or zdy != 0:
+  #       other_chars = [character] + [z for z in zombies if z is not zombie]
+  #       zombie.move(zdx, zdy, True, DEFAULT_WINDOW_SIZE[0],
+  #                   DEFAULT_WINDOW_SIZE[1], level=level,
+  #                   other_characters=other_chars)
+  #     # Ataque zombie al héroe si está en rango y cooldown expirado
+  #     if not character.dead and zombie.can_attack(character):
+  #       zombie.attack(character)
+  #   zombie_move_counter = 0
 
   window.fill((255, 255, 255))
   level.draw_background(window)
@@ -92,7 +141,6 @@ while repeat:
   for zombie in zombies:
     zombie.draw(window)
   pygame.display.flip()
-  # Limita a 60 FPS
   clock.tick(60)
 
 pygame.quit()
