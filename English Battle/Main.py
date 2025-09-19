@@ -5,6 +5,9 @@ import pygame, sys, random
 from pygame import Surface
 from pygame.time import Clock
 
+from lib.Color import (QUESTION_SURFACE_BG, ANSWER_SURFACE_BG,
+                       CORRECT_ANSWER_BG,
+                       WRONG_ANSWER_BG)
 from lib.Core import Hero, Zombie, Character
 from lib.Level import Level, Combat
 
@@ -215,17 +218,16 @@ def draw_game() -> None:
     window.blit(overlay, (0, 0))
     # Pregunta
     question_text = f"Ordena la oración correctamente: {combat_instance.current_question}"
-    question_surface = font.render(question_text, True, (255, 255, 255))
+    question_surface = font.render(question_text, True, QUESTION_SURFACE_BG)
     window.blit(question_surface, (40, 100))
     # Input del jugador
     input_surface = font.render("Tu respuesta: " + combat_input_text, True,
-                                (255, 255, 0))
+                                ANSWER_SURFACE_BG)
     window.blit(input_surface, (40, 150))
     # Resultado
     if combat_result_text:
-      result_surface = font.render(combat_result_text, True, (0, 255,
-                                                              0) if "Correcto" in combat_result_text else (
-        255, 0, 0))
+      result_surface = font.render(combat_result_text, True,
+                                   CORRECT_ANSWER_BG if "Correcto" in combat_result_text else WRONG_ANSWER_BG)
       window.blit(result_surface, (40, 200))
   pygame.display.flip()
 

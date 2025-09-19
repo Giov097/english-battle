@@ -12,172 +12,8 @@ from lib.Var import (
   DEFAULT_WINDOW_SIZE,
   DEFAULT_WALL_THICKNESS,
   DEFAULT_CELL_SIZE,
-  DEFAULT_NUM_WALLS,
-  DEFAULT_MIN_WALL_SIZE,
-  DEFAULT_MAX_WALL_SIZE,
   DEFAULT_DEATH_FADE_DURATION,
 )
-
-
-def random_maze_walls(window_size: tuple[int, int], num_walls: int = DEFAULT_NUM_WALLS,
-    min_size: int = DEFAULT_MIN_WALL_SIZE,
-    max_size: int = DEFAULT_MAX_WALL_SIZE) -> list[Rect]:
-  """Generates random walls for a maze."""
-  walls: list[Rect] = []
-  w, h = window_size
-  for _ in range(num_walls):
-    wall_width = random.randint(min_size, max_size)
-    wall_height = random.randint(15, 30)
-    x = random.randint(0, w - wall_width)
-    y = random.randint(0, h - wall_height)
-    walls.append(pygame.Rect(x, y, wall_width, wall_height))
-  return walls
-
-
-def generate_simple_maze(window_size: tuple[int, int], wall_thickness: int = DEFAULT_WALL_THICKNESS,
-    cell_size: int = DEFAULT_CELL_SIZE) -> list[Rect]:
-  """Generates a simple grid maze without gaps."""
-  walls: list[Rect] = []
-  w, h = window_size
-  # Vertical walls
-  for x in range(cell_size, w, cell_size):
-    for y in range(0, h, cell_size):
-      walls.append(pygame.Rect(x, y, wall_thickness, cell_size))
-  # Horizontal walls
-  for y in range(cell_size, h, cell_size):
-    for x in range(0, w, cell_size):
-      walls.append(pygame.Rect(x, y, cell_size, wall_thickness))
-  # Maze borders
-  walls.append(pygame.Rect(0, 0, w, wall_thickness))  # top
-  walls.append(
-      pygame.Rect(0, h - wall_thickness, w, wall_thickness))  # bottom
-  walls.append(pygame.Rect(0, 0, wall_thickness, h))  # left
-  walls.append(pygame.Rect(w - wall_thickness, 0, wall_thickness, h))  # right
-  return walls
-
-
-def generate_grid_maze_with_gaps(window_size: tuple[int, int],
-    wall_thickness: int = DEFAULT_WALL_THICKNESS,
-    cell_size: int = DEFAULT_CELL_SIZE) -> list[Rect]:
-  """Generates a grid maze with gaps (doors) in the walls to allow movement."""
-  walls: list[Rect] = []
-  w, h = window_size
-  # Vertical walls with gaps
-  for x in range(cell_size, w, cell_size):
-    for y in range(0, h, cell_size):
-      # Leave gaps in some cells
-      if (y // cell_size) % 2 == 0:
-        continue
-      walls.append(pygame.Rect(x, y, wall_thickness, cell_size))
-  # Horizontal walls with gaps
-  for y in range(cell_size, h, cell_size):
-    for x in range(0, w, cell_size):
-      if (x // cell_size) % 2 == 1:
-        continue
-      walls.append(pygame.Rect(x, y, cell_size, wall_thickness))
-  # Maze borders, but leave a "door" at the top and bottom
-  gap_size = cell_size
-  # Top
-  walls.append(pygame.Rect(0, 0, w // 2 - gap_size // 2, wall_thickness))
-  walls.append(pygame.Rect(w // 2 + gap_size // 2, 0, w // 2 - gap_size // 2,
-                           wall_thickness))
-  # Bottom
-  walls.append(
-      pygame.Rect(0, h - wall_thickness, w // 2 - gap_size // 2,
-                  wall_thickness))
-  walls.append(pygame.Rect(w // 2 + gap_size // 2, h - wall_thickness,
-                           w // 2 - gap_size // 2, wall_thickness))
-  # Left
-  walls.append(pygame.Rect(0, 0, wall_thickness, h // 2 - gap_size // 2))
-  walls.append(pygame.Rect(0, h // 2 + gap_size // 2, wall_thickness,
-                           h // 2 - gap_size // 2))
-  # Right
-  walls.append(
-      pygame.Rect(w - wall_thickness, 0, wall_thickness,
-                  h // 2 - gap_size // 2))
-  walls.append(
-      pygame.Rect(w - wall_thickness, h // 2 + gap_size // 2, wall_thickness,
-                  h // 2 - gap_size // 2))
-  return walls
-
-
-def init_maze_structures(cols: int, rows: int) -> tuple[
-  list[list[bool]], list[list[bool]], list[list[bool]]]:
-  """Initializes the structures for maze generation."""
-  visited: list[list[bool]] = [[False for _ in range(rows)] for _ in
-                               range(cols)]
-  vertical_walls: list[list[bool]] = [[True for _ in range(rows)] for _ in
-                                      range(cols + 1)]
-  horizontal_walls: list[list[bool]] = [[True for _ in range(rows + 1)] for _ in
-                                        range(cols)]
-  return visited, vertical_walls, horizontal_walls
-
-
-def dfs_maze(cx: int, cy: int, cols: int, rows: int, visited: list[list[bool]],
-    vertical_walls: list[list[int]], horizontal_walls: list[list[int]]) -> None:
-  """Depth-First Search maze generation algorithm."""
-  visited[cx][cy] = True
-  directions = [(0, -1), (1, 0), (0, 1), (-1, 0)]
-  random.shuffle(directions)
-  for dx, dy in directions:
-    nx, ny = cx + dx, cy + dy
-    if 0 <= nx < cols and 0 <= ny < rows and not visited[nx][ny]:
-      if dx == 1:  # right
-        vertical_walls[cx + 1][cy] = False
-      if dx == -1:  # left
-        vertical_walls[cx][cy] = False
-      if dy == 1:  # down
-        horizontal_walls[cx][cy + 1] = False
-      if dy == -1:  # up
-        horizontal_walls[cx][cy] = False
-      dfs_maze(nx, ny, cols, rows, visited, vertical_walls, horizontal_walls)
-
-
-def build_maze_walls(cols: int, rows: int, cell_size: int, wall_thickness: int,
-    window_size: tuple[int, int],
-    vertical_walls: list[list[int]], horizontal_walls: list[list[int]]) -> list[
-  Rect]:
-  """Builds the maze walls from the wall structures."""
-  w, h = window_size
-  walls: list[Rect] = []
-  # Build vertical walls
-  for x in range(cols + 1):
-    for y in range(rows):
-      if vertical_walls[x][y]:
-        wx = x * cell_size
-        wy = y * cell_size
-        walls.append(pygame.Rect(wx, wy, wall_thickness, cell_size))
-  # Build horizontal walls
-  for x in range(cols):
-    for y in range(rows + 1):
-      if horizontal_walls[x][y]:
-        wx = x * cell_size
-        wy = y * cell_size
-        walls.append(pygame.Rect(wx, wy, cell_size, wall_thickness))
-  # Maze borders
-  walls.append(pygame.Rect(0, 0, w, wall_thickness))  # top
-  walls.append(
-      pygame.Rect(0, h - wall_thickness, w, wall_thickness))  # bottom
-  walls.append(pygame.Rect(0, 0, wall_thickness, h))  # left
-  walls.append(pygame.Rect(w - wall_thickness, 0, wall_thickness, h))  # right
-  return walls
-
-
-def generate_random_maze(window_size: tuple[int, int], wall_thickness: int = DEFAULT_WALL_THICKNESS,
-    cell_size: int = DEFAULT_CELL_SIZE) -> list[Rect]:
-  """Generates a random maze using DFS algorithm."""
-  w, h = window_size
-  cols = w // cell_size
-  rows = h // cell_size
-
-  visited, vertical_walls, horizontal_walls = init_maze_structures(cols, rows)
-  start_x = random.randint(0, cols - 1)
-  start_y = random.randint(0, rows - 1)
-  dfs_maze(start_x, start_y, cols, rows, visited, vertical_walls,
-           horizontal_walls)
-  walls = build_maze_walls(cols, rows, cell_size, wall_thickness, window_size,
-                           vertical_walls, horizontal_walls)
-  return walls
 
 
 class Level:
@@ -191,10 +27,98 @@ class Level:
     self.background: Surface = pygame.transform.scale(
         BACKGROUNDS[self.background_name], self.window_size
     )
-    self.maze_walls: list[Rect] = generate_random_maze(self.window_size)
+    self.maze_walls: list[Rect] = self._generate_random_maze(self.window_size)
     self._death_fade_active: bool = False
     self._death_fade_start_time: int | None = None
     self._death_fade_duration: float = DEFAULT_DEATH_FADE_DURATION  # seconds
+
+  @staticmethod
+  def _init_maze_structures(cols: int, rows: int) -> tuple[
+    list[list[bool]], list[list[bool]], list[list[bool]]]:
+    """
+    Initializes the structures for maze generation.
+    """
+    visited: list[list[bool]] = [[False for _ in range(rows)] for _ in
+                                 range(cols)]
+    vertical_walls: list[list[bool]] = [[True for _ in range(rows)] for _ in
+                                        range(cols + 1)]
+    horizontal_walls: list[list[bool]] = [[True for _ in range(rows + 1)] for _
+                                          in range(cols)]
+    return visited, vertical_walls, horizontal_walls
+
+  def _dfs_maze(self, cx: int, cy: int, cols: int, rows: int,
+      visited: list[list[bool]],
+      vertical_walls: list[list[int]],
+      horizontal_walls: list[list[int]]) -> None:
+    """Depth-First Search maze generation algorithm."""
+    visited[cx][cy] = True
+    directions = [(0, -1), (1, 0), (0, 1), (-1, 0)]
+    random.shuffle(directions)
+    for dx, dy in directions:
+      nx, ny = cx + dx, cy + dy
+      if 0 <= nx < cols and 0 <= ny < rows and not visited[nx][ny]:
+        if dx == 1:  # right
+          vertical_walls[cx + 1][cy] = False
+        if dx == -1:  # left
+          vertical_walls[cx][cy] = False
+        if dy == 1:  # down
+          horizontal_walls[cx][cy + 1] = False
+        if dy == -1:  # up
+          horizontal_walls[cx][cy] = False
+        self._dfs_maze(nx, ny, cols, rows, visited, vertical_walls,
+                       horizontal_walls)
+
+  @staticmethod
+  def _build_maze_walls(cols: int, rows: int, cell_size: int,
+      wall_thickness: int,
+      window_size: tuple[int, int],
+      vertical_walls: list[list[int]], horizontal_walls: list[list[int]]) -> \
+  list[Rect]:
+    """Builds the maze walls from the wall structures."""
+    w, h = window_size
+    walls: list[Rect] = []
+    # Build vertical walls
+    for x in range(cols + 1):
+      for y in range(rows):
+        if vertical_walls[x][y]:
+          wx = x * cell_size
+          wy = y * cell_size
+          walls.append(pygame.Rect(wx, wy, wall_thickness, cell_size))
+    # Build horizontal walls
+    for x in range(cols):
+      for y in range(rows + 1):
+        if horizontal_walls[x][y]:
+          wx = x * cell_size
+          wy = y * cell_size
+          walls.append(pygame.Rect(wx, wy, cell_size, wall_thickness))
+    # Maze borders
+    walls.append(pygame.Rect(0, 0, w, wall_thickness))  # top
+    walls.append(
+        pygame.Rect(0, h - wall_thickness, w, wall_thickness))  # bottom
+    walls.append(pygame.Rect(0, 0, wall_thickness, h))  # left
+    walls.append(pygame.Rect(w - wall_thickness, 0, wall_thickness, h))  # right
+    return walls
+
+  def _generate_random_maze(self, window_size: tuple[int, int],
+      wall_thickness: int = DEFAULT_WALL_THICKNESS,
+      cell_size: int = DEFAULT_CELL_SIZE) -> list[Rect]:
+    """
+    Generates a random maze using DFS algorithm.
+    """
+    w, h = window_size
+    cols = w // cell_size
+    rows = h // cell_size
+
+    visited, vertical_walls, horizontal_walls = self._init_maze_structures(cols,
+                                                                           rows)
+    start_x = random.randint(0, cols - 1)
+    start_y = random.randint(0, rows - 1)
+    self._dfs_maze(start_x, start_y, cols, rows, visited, vertical_walls,
+                   horizontal_walls)
+    walls = self._build_maze_walls(cols, rows, cell_size, wall_thickness,
+                                   window_size,
+                                   vertical_walls, horizontal_walls)
+    return walls
 
   def draw_background(self, surface: Surface) -> None:
     """Draws the background image on the given surface."""
@@ -214,7 +138,7 @@ class Level:
 
   def handle_player_death(self, window_surface: Surface) -> None:
     """
-    Maneja el fade a negro cuando el jugador muere. Debe llamarse en el bucle principal.
+    Handles the death fade effect and sound sequence when the player dies.
     """
     if not self._death_fade_active:
       self._death_fade_active = True
@@ -231,7 +155,7 @@ class Level:
 
   def _draw_death_fade(self, surface: Surface, alpha: int) -> None:
     """
-    Dibuja el overlay negro con la opacidad correspondiente.
+    Draws a black overlay with the given alpha for the death fade effect.
     """
     overlay = pygame.Surface(self.window_size)
     overlay.fill((0, 0, 0))
