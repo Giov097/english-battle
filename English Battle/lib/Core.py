@@ -9,8 +9,13 @@ from pygame.mixer import SoundType
 
 from lib.Level import Level
 from Sound import SOUNDS
-
-DEFAULT_CHARACTER_SIZE = (23, 30)
+from lib.Var import (
+  DEFAULT_CHARACTER_SIZE,
+  WALK_FRAME_DELAY_NORMAL,
+  WALK_FRAME_DELAY_BORDER,
+  DAMAGE_DISPLAY_FRAMES,
+  ATTACK_DISPLAY_FRAMES,
+)
 
 
 class Character(ABC):
@@ -20,8 +25,8 @@ class Character(ABC):
       image_path: Surface, x: int = 0, y: int = 0,
       sprites: dict[str, Surface] = None, speed: int = 5,
       attack_range: int = 30, attack_cooldown: int = 30,
-      attack_hit_sounds: dict[str, SoundType] = None,
-      attack_miss_sounds: dict[str, SoundType] = None) -> None:
+      attack_hit_sounds: list[SoundType] = None,
+      attack_miss_sounds: list[SoundType] = None) -> None:
     # Base attributes
     self.name = name
     self.health = health
@@ -45,15 +50,15 @@ class Character(ABC):
     self.walking_sprites = []
     self.walk_index = 0
     self.walk_frame_count = 0
-    self.walk_frame_delay_normal = 5
-    self.walk_frame_delay_border = 20
+    self.walk_frame_delay_normal = WALK_FRAME_DELAY_NORMAL
+    self.walk_frame_delay_border = WALK_FRAME_DELAY_BORDER
     self.walk_frame_delay = self.walk_frame_delay_normal
     self.last_horizontal_direction = 1
     self.damage_timer = 0
-    self.DAMAGE_DISPLAY_FRAMES = 15
+    self.DAMAGE_DISPLAY_FRAMES = DAMAGE_DISPLAY_FRAMES
     # Attack management
     self.attack_timer = 0
-    self.ATTACK_DISPLAY_FRAMES = 10
+    self.ATTACK_DISPLAY_FRAMES = ATTACK_DISPLAY_FRAMES
     self.attack_cooldown = attack_cooldown
     self.attack_cooldown_timer = 0
     # Sounds and step management
@@ -316,8 +321,8 @@ class Zombie(Character):
       self.sprites["walking_3"]
     ]
     self.step_sounds = []
-    self.walk_frame_delay_normal = 15
-    self.walk_frame_delay_border = 40
+    self.walk_frame_delay_normal = WALK_FRAME_DELAY_NORMAL
+    self.walk_frame_delay_border = WALK_FRAME_DELAY_BORDER
 
   def draw(self, surface: Surface) -> None:
     surface.blit(self.image, (self.x, self.y))

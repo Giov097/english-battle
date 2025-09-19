@@ -8,11 +8,20 @@ from pygame.mixer import Channel
 
 from Sprite.Backgrounds import BACKGROUNDS
 from Sound import SOUNDS
+from lib.Var import (
+  DEFAULT_WINDOW_SIZE,
+  DEFAULT_WALL_THICKNESS,
+  DEFAULT_CELL_SIZE,
+  DEFAULT_NUM_WALLS,
+  DEFAULT_MIN_WALL_SIZE,
+  DEFAULT_MAX_WALL_SIZE,
+  DEFAULT_DEATH_FADE_DURATION,
+)
 
 
-def random_maze_walls(window_size: tuple[int, int], num_walls: int = 6,
-    min_size: int = 40,
-    max_size: int = 200) -> list[Rect]:
+def random_maze_walls(window_size: tuple[int, int], num_walls: int = DEFAULT_NUM_WALLS,
+    min_size: int = DEFAULT_MIN_WALL_SIZE,
+    max_size: int = DEFAULT_MAX_WALL_SIZE) -> list[Rect]:
   """Generates random walls for a maze."""
   walls: list[Rect] = []
   w, h = window_size
@@ -25,8 +34,8 @@ def random_maze_walls(window_size: tuple[int, int], num_walls: int = 6,
   return walls
 
 
-def generate_simple_maze(window_size: tuple[int, int], wall_thickness: int = 20,
-    cell_size: int = 80) -> list[Rect]:
+def generate_simple_maze(window_size: tuple[int, int], wall_thickness: int = DEFAULT_WALL_THICKNESS,
+    cell_size: int = DEFAULT_CELL_SIZE) -> list[Rect]:
   """Generates a simple grid maze without gaps."""
   walls: list[Rect] = []
   w, h = window_size
@@ -48,8 +57,8 @@ def generate_simple_maze(window_size: tuple[int, int], wall_thickness: int = 20,
 
 
 def generate_grid_maze_with_gaps(window_size: tuple[int, int],
-    wall_thickness: int = 20,
-    cell_size: int = 80) -> list[Rect]:
+    wall_thickness: int = DEFAULT_WALL_THICKNESS,
+    cell_size: int = DEFAULT_CELL_SIZE) -> list[Rect]:
   """Generates a grid maze with gaps (doors) in the walls to allow movement."""
   walls: list[Rect] = []
   w, h = window_size
@@ -154,8 +163,8 @@ def build_maze_walls(cols: int, rows: int, cell_size: int, wall_thickness: int,
   return walls
 
 
-def generate_random_maze(window_size: tuple[int, int], wall_thickness: int = 20,
-    cell_size: int = 80) -> list[Rect]:
+def generate_random_maze(window_size: tuple[int, int], wall_thickness: int = DEFAULT_WALL_THICKNESS,
+    cell_size: int = DEFAULT_CELL_SIZE) -> list[Rect]:
   """Generates a random maze using DFS algorithm."""
   w, h = window_size
   cols = w // cell_size
@@ -174,7 +183,7 @@ def generate_random_maze(window_size: tuple[int, int], wall_thickness: int = 20,
 class Level:
   """Class to manage the game level, including background and maze."""
 
-  def __init__(self, window_size: tuple[int, int] = (640, 480),
+  def __init__(self, window_size: tuple[int, int] = DEFAULT_WINDOW_SIZE,
       background_name: str = "grass") -> None:
     self._death_handled: None = None
     self.window_size: tuple[int, int] = window_size
@@ -185,7 +194,7 @@ class Level:
     self.maze_walls: list[Rect] = generate_random_maze(self.window_size)
     self._death_fade_active: bool = False
     self._death_fade_start_time: int | None = None
-    self._death_fade_duration: float = 5.0  # seconds
+    self._death_fade_duration: float = DEFAULT_DEATH_FADE_DURATION  # seconds
 
   def draw_background(self, surface: Surface) -> None:
     """Draws the background image on the given surface."""
