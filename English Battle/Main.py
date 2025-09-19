@@ -197,35 +197,14 @@ def move_zombies() -> None:
     zombie_move_counter = 0
 
 
-def draw_health_bar(surface: Surface, char: Character, offset_y: int = -10,
-    width: int = 30, height: int = 6) -> None:
-  """Draws a health bar above the character."""
-  if not hasattr(char, "max_health"):
-    return
-  health_ratio = max(0, char.health) / char.max_health
-  x = char.x + (char.image.get_width() - width) // 2
-  y = char.y + offset_y
-  pygame.draw.rect(surface, (60, 60, 60), (x, y, width, height))
-  green_width = int(width * health_ratio)
-  red_width = width - green_width
-  if green_width > 0:
-    pygame.draw.rect(surface, (0, 200, 0), (x, y, green_width, height))
-  if red_width > 0:
-    pygame.draw.rect(surface, (200, 0, 0),
-                     (x + green_width, y, red_width, height))
-  pygame.draw.rect(surface, (0, 0, 0), (x, y, width, height), 1)
-
-
 def draw_game() -> None:
   """Draws all game elements on the window."""
   window.fill((255, 255, 255))
   level.draw_background(window)
   level.draw_maze(window)
   character.draw(window)
-  draw_health_bar(window, character)
   for zombie in zombies:
     zombie.draw(window)
-    draw_health_bar(window, zombie)
 
   # Interfaz gráfica para combate
   if combat_instance is not None and combat_instance.active:

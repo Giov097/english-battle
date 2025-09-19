@@ -260,9 +260,30 @@ class Character(ABC):
     else:
       self.image = base_sprite
 
+  def draw_health_bar(self, surface: Surface) -> None:
+    """
+    Draws the health bar above the character.
+    """
+    bar_width = DEFAULT_CHARACTER_SIZE[0]
+    bar_height = 6
+    x = self.x
+    y = self.y - bar_height - 2
+    health_ratio = max(0,
+                       self.health) / self.max_health if self.max_health > 0 else 0
+    fill_width = int(bar_width * health_ratio)
+    # Background
+    pygame.draw.rect(surface, (60, 60, 60), (x, y, bar_width, bar_height))
+    # Health bar (green/red)
+    color = (0, 200, 0) if health_ratio > 0.3 else (200, 0, 0)
+    pygame.draw.rect(surface, color, (x, y, fill_width, bar_height))
+    # Border
+    pygame.draw.rect(surface, (0, 0, 0), (x, y, bar_width, bar_height), 1)
+
   @abstractmethod
   def draw(self, surface: Surface) -> None:
-    """Draw the character on the given surface."""
+    """
+    Draws the character on the given surface.
+    """
     pass
 
 
@@ -297,7 +318,11 @@ class Hero(Character):
     self.step_channel = pygame.mixer.Channel(5)
 
   def draw(self, surface: Surface) -> None:
+    """
+    Draws the hero and its health bar on the given surface.
+    """
     surface.blit(self.image, (self.x, self.y))
+    self.draw_health_bar(surface)
 
 
 class Zombie(Character):
@@ -325,4 +350,8 @@ class Zombie(Character):
     self.walk_frame_delay_border = WALK_FRAME_DELAY_BORDER
 
   def draw(self, surface: Surface) -> None:
+    """
+    Draws the zombie and its health bar on the given surface.
+    """
     surface.blit(self.image, (self.x, self.y))
+    self.draw_health_bar(surface)
