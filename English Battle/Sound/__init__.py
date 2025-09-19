@@ -1,10 +1,14 @@
+"""Module to load and manage sound effects for the game."""
+
 import pygame
 import os
+
+from pygame.mixer import SoundType
 
 pygame.mixer.init()
 SOUND_DIR = os.path.dirname(__file__)
 
-SOUNDS = {}
+SOUNDS: dict[str, SoundType] = {}
 
 for filename in os.listdir(SOUND_DIR):
   if filename.lower().endswith(('.wav', '.ogg', '.mp3')):

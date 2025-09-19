@@ -1,54 +1,94 @@
 """Main module for the English Battle game."""
+from typing import Optional
 
-import pygame
-import sys
-import random
+import pygame, sys, random
+from pygame import Surface
+from pygame.time import Clock
 
-from lib.Core import Hero, Zombie
-from lib.Level import Level
+from lib.Core import Hero, Zombie, Character
+from lib.Level import Level, Combat
 
 pygame.init()
 
-DEFAULT_WINDOW_SIZE = (640, 480)
-window = pygame.display.set_mode(DEFAULT_WINDOW_SIZE)
+DEFAULT_WINDOW_SIZE: tuple[int, int] = (640, 480)
+window: Surface = pygame.display.set_mode(DEFAULT_WINDOW_SIZE)
 pygame.display.set_caption("English Battle")
 # Nueva posición inicial
-character = Hero(50, 50)
-level = Level(DEFAULT_WINDOW_SIZE)
+character: Character = Hero(50, 50, health=20)
+level: Level = Level(DEFAULT_WINDOW_SIZE)
 
 
 def get_valid_spawn(lvl: Level, window_size: tuple[int, int]) -> tuple[
   int, int]:
   """Generates a valid spawn position."""
   sprite_w, sprite_h = (23, 30)
-  while True:
+  x, y = 0, 0
+  valid_spawn_point = False
+  while not valid_spawn_point:
     x = random.randint(0, window_size[0] - sprite_w)
     y = random.randint(0, window_size[1] - sprite_h)
     rect = pygame.Rect(x, y, sprite_w, sprite_h)
     if not lvl.check_collision(rect):
-      return x, y
+      valid_spawn_point = True
+  return x, y
 
 
-NUM_ZOMBIES = 5
-zombies = []
+NUM_ZOMBIES: int = 5
+zombies: list[Zombie] = []
 for _ in range(NUM_ZOMBIES):
   zx, zy = get_valid_spawn(level, DEFAULT_WINDOW_SIZE)
-  zombies.append(Zombie(zx, zy))
+  zombies.append(Zombie(zx, zy, health=20))
 
-repeat = True
+repeat: bool = True
 # Para limitar los FPS
-clock = pygame.time.Clock()
+clock: Clock = pygame.time.Clock()
 
 # Para controlar el movimiento aleatorio de los zombies
-ZOMBIE_MOVE_INTERVAL = 10  # frames
-zombie_move_counter = 0
-attack_pressed = False  # Para detectar pulsación de la tecla
+ZOMBIE_MOVE_INTERVAL: int = 10
+zombie_move_counter: int = 0
 
-while repeat:
+# Para detectar pulsación de la tecla
+attack_pressed: bool = False
+
+combat_instance: Optional[Combat] = None
+combat_input_text = ""
+combat_result_text = ""
+font = pygame.font.SysFont("Roboto", 24)
+
+
+def handle_events() -> None:
+  """Handles all pygame events."""
+  global repeat, combat_instance, combat_input_text, combat_result_text
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
       repeat = False
+    handle_combat_input(event)
 
+
+def handle_combat_input(event) -> None:
+  """Combat input handling."""
+  global combat_instance, combat_input_text, combat_result_text
+  if combat_instance is not None and combat_instance.active:
+    if event.type == pygame.KEYDOWN:
+      if event.key == pygame.K_RETURN:
+        if combat_input_text.strip():
+          character.update_sprite_after_damage()
+          for zombie in zombies:
+            zombie.update_sprite_after_damage()
+          draw_game()
+          combat_result_text = combat_instance.process_turn(combat_input_text)
+          combat_input_text = ""
+      elif event.key == pygame.K_BACKSPACE:
+        combat_input_text = combat_input_text[:-1]
+      else:
+        char = event.unicode
+        if char.isprintable():
+          combat_input_text += char
+
+
+def move_character() -> None:
+  """Moves the hero based on key presses."""
+  global character, zombies, combat_instance
   keys = pygame.key.get_pressed()
   moving = False
   dx, dy = 0, 0
@@ -65,83 +105,179 @@ while repeat:
     dy = 1
     moving = True
 
-  character.move(dx, dy, moving, DEFAULT_WINDOW_SIZE[0], DEFAULT_WINDOW_SIZE[1],
-                 level=level, other_characters=zombies)
+  # Solo permite movimiento si no hay combate activo
+  if combat_instance is None or not combat_instance.active:
+    character.move(dx, dy, moving, DEFAULT_WINDOW_SIZE[0],
+                   DEFAULT_WINDOW_SIZE[1],
+                   level=level, other_characters=zombies)
+  # Si hay combate, nadie se mueve (ni héroe ni zombies)
 
-  # Ataque del héroe solo si se presiona la tecla "x" (no sostenida)
+
+def handle_combat_trigger() -> None:
+  """Detects and initiates combat if the hero is near a zombie."""
+  global combat_instance, combat_result_text, combat_input_text
+  if combat_instance is None or not combat_instance.active:
+    for zombie in zombies:
+      if not zombie.dead and character.can_attack(zombie):
+        combat_instance = Combat(character, zombie)
+        question = combat_instance.generate_question()
+        combat_result_text = ""
+        combat_input_text = ""
+        break
+
+
+def handle_attack() -> None:
+  """Handles the attack action when the attack key is pressed."""
+  global attack_pressed, character, zombies, combat_instance
+  keys = pygame.key.get_pressed()
   if keys[pygame.K_x]:
-    if not attack_pressed:
-      target = None
-      min_dist = float('inf')
-      for zombie in zombies:
-        if not zombie.dead:
-          # Calcula distancia al centro
-          hero_center = (
-            character.x + 23 // 2,
-            character.y + 30 // 2
-          )
-          zombie_center = (
-            zombie.x + 23 // 2,
-            zombie.y + 30 // 2
-          )
-          dist = ((hero_center[0] - zombie_center[0]) ** 2 +
-                  (hero_center[1] - zombie_center[1]) ** 2) ** 0.5
-          if dist <= character.attack_range and dist < min_dist:
-            target = zombie
-            min_dist = dist
+    if not attack_pressed and (
+        combat_instance is None or not combat_instance.active):
+      target = _find_attackable_zombie()
       if target:
         character.attack(target)
       else:
-        closest = None
-        min_dist = float('inf')
-        for zombie in zombies:
-          if not zombie.dead:
-            hero_center = (
-              character.x + 23 // 2,
-              character.y + 30 // 2
-            )
-            zombie_center = (
-              zombie.x + 23 // 2,
-              zombie.y + 30 // 2
-            )
-            dist = ((hero_center[0] - zombie_center[0]) ** 2 +
-                    (hero_center[1] - zombie_center[1]) ** 2) ** 0.5
-            if dist < min_dist:
-              closest = zombie
-              min_dist = dist
+        closest = _find_closest_zombie()
         if closest:
           character.attack(closest)
       attack_pressed = True
   else:
     attack_pressed = False
 
-  # Movimiento aleatorio de zombies cada cierto intervalo
-  # zombie_move_counter += 1
-  # if zombie_move_counter >= ZOMBIE_MOVE_INTERVAL:
-  #   for zombie in zombies:
-  #     if zombie.dead:
-  #       continue
-  #     zdx, zdy = 0, 0
-  #     direction = random.choice([(1, 0), (-1, 0), (0, 1), (0, -1), (0, 0)])
-  #     zdx, zdy = direction
-  #     if zdx != 0 or zdy != 0:
-  #       other_chars = [character] + [z for z in zombies if z is not zombie]
-  #       zombie.move(zdx, zdy, True, DEFAULT_WINDOW_SIZE[0],
-  #                   DEFAULT_WINDOW_SIZE[1], level=level,
-  #                   other_characters=other_chars)
-  #     # Ataque zombie al héroe si está en rango y cooldown expirado
-  #     if not character.dead and zombie.can_attack(character):
-  #       zombie.attack(character)
-  #   zombie_move_counter = 0
 
+def _find_attackable_zombie() -> Optional[Zombie]:
+  """Finds the closest zombie within attack range."""
+  min_dist = float('inf')
+  target = None
+  for zombie in zombies:
+    if not zombie.dead:
+      hero_center = (character.x + 23 // 2, character.y + 30 // 2)
+      zombie_center = (zombie.x + 23 // 2, zombie.y + 30 // 2)
+      dist = ((hero_center[0] - zombie_center[0]) ** 2 +
+              (hero_center[1] - zombie_center[1]) ** 2) ** 0.5
+      if dist <= character.attack_range and dist < min_dist:
+        target = zombie
+        min_dist = dist
+  return target
+
+
+def _find_closest_zombie() -> Optional[Zombie]:
+  """Finds the closest zombie (regardless of range)."""
+  min_dist = float('inf')
+  closest = None
+  for zombie in zombies:
+    if not zombie.dead:
+      hero_center = (character.x + 23 // 2, character.y + 30 // 2)
+      zombie_center = (zombie.x + 23 // 2, zombie.y + 30 // 2)
+      dist = ((hero_center[0] - zombie_center[0]) ** 2 +
+              (hero_center[1] - zombie_center[1]) ** 2) ** 0.5
+      if dist < min_dist:
+        closest = zombie
+        min_dist = dist
+  return closest
+
+
+def move_zombies() -> None:
+  """Moves the zombies randomly at set intervals."""
+  global zombie_move_counter, zombies, character, combat_instance
+  zombie_move_counter += 1
+  if zombie_move_counter >= ZOMBIE_MOVE_INTERVAL:
+    if combat_instance is None or not combat_instance.active:
+      for zombie in zombies:
+        if zombie.dead:
+          continue
+        zdx, zdy = 0, 0
+        direction = random.choice([(1, 0), (-1, 0), (0, 1), (0, -1), (0, 0)])
+        zdx, zdy = direction
+        if zdx != 0 or zdy != 0:
+          other_chars = [character] + [z for z in zombies if z is not zombie]
+          zombie.move(zdx, zdy, True, DEFAULT_WINDOW_SIZE[0],
+                      DEFAULT_WINDOW_SIZE[1], level=level,
+                      other_characters=other_chars)
+    zombie_move_counter = 0
+
+
+def draw_health_bar(surface: Surface, char: Character, offset_y: int = -10,
+    width: int = 30, height: int = 6) -> None:
+  """Draws a health bar above the character."""
+  if not hasattr(char, "max_health"):
+    return
+  health_ratio = max(0, char.health) / char.max_health
+  x = char.x + (char.image.get_width() - width) // 2
+  y = char.y + offset_y
+  pygame.draw.rect(surface, (60, 60, 60), (x, y, width, height))
+  green_width = int(width * health_ratio)
+  red_width = width - green_width
+  if green_width > 0:
+    pygame.draw.rect(surface, (0, 200, 0), (x, y, green_width, height))
+  if red_width > 0:
+    pygame.draw.rect(surface, (200, 0, 0),
+                     (x + green_width, y, red_width, height))
+  pygame.draw.rect(surface, (0, 0, 0), (x, y, width, height), 1)
+
+
+def draw_game() -> None:
+  """Draws all game elements on the window."""
   window.fill((255, 255, 255))
   level.draw_background(window)
   level.draw_maze(window)
   character.draw(window)
+  draw_health_bar(window, character)
   for zombie in zombies:
     zombie.draw(window)
-  pygame.display.flip()
-  clock.tick(60)
+    draw_health_bar(window, zombie)
 
-pygame.quit()
-sys.exit()
+  # Interfaz gráfica para combate
+  if combat_instance is not None and combat_instance.active:
+    # Fondo semitransparente
+    overlay = pygame.Surface(DEFAULT_WINDOW_SIZE)
+    overlay.set_alpha(180)
+    overlay.fill((0, 0, 0))
+    window.blit(overlay, (0, 0))
+    # Pregunta
+    question_text = f"Ordena la oración correctamente: {combat_instance.current_question}"
+    question_surface = font.render(question_text, True, (255, 255, 255))
+    window.blit(question_surface, (40, 100))
+    # Input del jugador
+    input_surface = font.render("Tu respuesta: " + combat_input_text, True,
+                                (255, 255, 0))
+    window.blit(input_surface, (40, 150))
+    # Resultado
+    if combat_result_text:
+      result_surface = font.render(combat_result_text, True, (0, 255,
+                                                              0) if "Correcto" in combat_result_text else (
+        255, 0, 0))
+      window.blit(result_surface, (40, 200))
+  pygame.display.flip()
+
+
+def update_all_sprites() -> None:
+  """Updates all character sprites."""
+  character.update_sprite_after_damage()
+  for zombie in zombies:
+    zombie.update_sprite_after_damage()
+
+
+def main_loop() -> None:
+  """Main game loop."""
+  global repeat
+  while repeat:
+    if character.dead:
+      level.handle_player_death(window)
+      pygame.display.flip()
+      clock.tick(60)
+      continue
+    handle_events()
+    move_character()
+    handle_combat_trigger()
+    handle_attack()
+    move_zombies()
+    update_all_sprites()
+    draw_game()
+    clock.tick(60)
+  pygame.quit()
+  sys.exit()
+
+
+if __name__ == "__main__":
+  main_loop()
