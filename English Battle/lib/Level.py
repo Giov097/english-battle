@@ -257,7 +257,7 @@ class Combat:
 
   def process_turn(self, player_answer: str) -> str:
     """Process the turn based on player's answer. If both survive, generate a new question."""
-    if not self.active or self.hero.dead or self.enemy.dead:
+    if not self.active or not self.hero.is_alive() or not self.enemy.is_alive():
       """No hay combate activo."""
       pass
     if self.check_answer(player_answer):
@@ -267,7 +267,7 @@ class Combat:
       self.enemy.attack(self.hero)
       result = "Incorrecto. El enemigo te ataca."
     # Finaliza combate si alguno muere
-    if self.enemy.dead or self.hero.dead:
+    if not self.enemy.is_alive() or not self.hero.is_alive():
       self.active = False
     else:
       self.generate_question()
@@ -293,8 +293,7 @@ class WordOrderingModal:
 
   def _init_buttons(self) -> None:
     """Initializes the button rectangles."""
-    # Define los rects de los botones
-    btn_w, btn_h = 100, 36  # Botones más compactos
+    btn_w, btn_h = 100, 36
     margin = 10
     y_btn = self.rect.y + self.rect.height - btn_h - margin
     self.confirm_btn_rect = pygame.Rect(
@@ -336,19 +335,19 @@ class WordOrderingModal:
       surface.blit(txt, (rect.x + 6, rect.y + 4))
     # Área de destino resaltada
     answer_area_rect = pygame.Rect(
-      self.rect.x + 5,
-      self.rect.y + self.rect.height // 2 - 8,
-      self.rect.width - 10,
-      48
+        self.rect.x + 5,
+        self.rect.y + self.rect.height // 2 - 8,
+        self.rect.width - 10,
+        48
     )
     pygame.draw.rect(surface, Color.ANSWER_AREA_BG, answer_area_rect)
     pygame.draw.rect(surface, Color.ANSWER_AREA_BORDER, answer_area_rect, 2)
-    # Texto indicativo SOLO si no hay palabras en respuesta
     if not self.answer_words:
-      hint_txt = self.font.render("Arrastra aquí para formar la oración", True, Color.ANSWER_AREA_BORDER)
-      hint_rect = hint_txt.get_rect(center=(answer_area_rect.centerx, answer_area_rect.y + 24))
+      hint_txt = self.font.render("Arrastra aquí para formar la oración", True,
+                                  Color.ANSWER_AREA_BORDER)
+      hint_rect = hint_txt.get_rect(
+          center=(answer_area_rect.centerx, answer_area_rect.y + 24))
       surface.blit(hint_txt, hint_rect)
-    # Palabras en respuesta
     for i, word in enumerate(self.answer_words):
       rect = self.word_rects["answer"][i]
       pygame.draw.rect(surface, Color.ANSWER_WORD_BG, rect)
@@ -366,7 +365,6 @@ class WordOrderingModal:
     if self.result_text:
       result_color = Color.CORRECT_ANSWER_BG if "Correcto" in self.result_text else Color.WRONG_ANSWER_BG
       result_surface = self.font.render(self.result_text, True, result_color)
-      # Calcula posición debajo de los botones
       result_x = self.rect.x + 10
       result_y = self.confirm_btn_rect.bottom + 10
       surface.blit(result_surface, (result_x, result_y))
@@ -386,6 +384,7 @@ class WordOrderingModal:
     surface.blit(txt, txt_rect)
 
   def handle_event(self, event) -> None:
+    """Handles mouse events for drag-and-drop and button clicks."""
     if event.type == MOUSEBUTTONDOWN:
       mx, my = event.pos
       # Botón Confirmar
@@ -429,9 +428,11 @@ class WordOrderingModal:
       pass
 
   def get_player_answer(self) -> str:
+    """Returns the player's constructed answer as a string."""
     return " ".join(self.answer_words)
 
-  def reset(self):
+  def reset(self) -> None:
+    """Resets the modal to initial state."""
     self.answer_words = []
     self.confirmed = False
     self._update_word_rects()

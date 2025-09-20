@@ -79,7 +79,9 @@ def handle_events() -> None:
             word_ordering_modal.result_text = combat_result_text
             if combat_instance.active:
               words = combat_instance.current_question.split(" / ")
-              word_ordering_modal = WordOrderingModal(words, font, pygame.Rect(40, 100, 560, 260))
+              word_ordering_modal = WordOrderingModal(words, font,
+                                                      pygame.Rect(40, 100, 560,
+                                                                  260))
               word_ordering_modal.result_text = ""
             else:
               word_ordering_modal = None
@@ -143,7 +145,7 @@ def handle_combat_trigger() -> None:
   global combat_instance, combat_result_text, combat_input_text, word_ordering_modal
   if combat_instance is None or not combat_instance.active:
     for zombie in zombies:
-      if not zombie.dead and character.can_attack(zombie):
+      if zombie.is_alive() and character.can_attack(zombie):
         combat_instance = Combat(character, zombie, level.questions_set)
         question = combat_instance.generate_question()
         combat_result_text = ""
@@ -151,7 +153,9 @@ def handle_combat_trigger() -> None:
         # Inicializa el modal si es word_ordering
         if combat_instance.current_type == "word_ordering":
           words = question.split(" / ")
-          word_ordering_modal = WordOrderingModal(words, font, pygame.Rect(40, 100, 560, 260))
+          word_ordering_modal = WordOrderingModal(words, font,
+                                                  pygame.Rect(40, 100, 560,
+                                                              260))
         else:
           word_ordering_modal = None
         break
@@ -181,7 +185,7 @@ def _find_attackable_zombie() -> Optional[Zombie]:
   min_dist = float('inf')
   target = None
   for zombie in zombies:
-    if not zombie.dead:
+    if zombie.is_alive():
       hero_center = (character.x + 23 // 2, character.y + 30 // 2)
       zombie_center = (zombie.x + 23 // 2, zombie.y + 30 // 2)
       dist = ((hero_center[0] - zombie_center[0]) ** 2 +
@@ -197,7 +201,7 @@ def _find_closest_zombie() -> Optional[Zombie]:
   min_dist = float('inf')
   closest = None
   for zombie in zombies:
-    if not zombie.dead:
+    if zombie.is_alive():
       hero_center = (character.x + 23 // 2, character.y + 30 // 2)
       zombie_center = (zombie.x + 23 // 2, zombie.y + 30 // 2)
       dist = ((hero_center[0] - zombie_center[0]) ** 2 +
@@ -215,7 +219,7 @@ def move_zombies() -> None:
   if zombie_move_counter >= ZOMBIE_MOVE_INTERVAL:
     if combat_instance is None or not combat_instance.active:
       for zombie in zombies:
-        if zombie.dead:
+        if not zombie.is_alive():
           continue
         zdx, zdy = 0, 0
         direction = random.choice([(1, 0), (-1, 0), (0, 1), (0, -1), (0, 0)])
@@ -234,11 +238,11 @@ def draw_game() -> None:
   level.draw_background(window)
   level.draw_maze(window)
   for zombie in zombies:
-    if zombie.dead:
+    if not zombie.is_alive():
       zombie.draw(window)
   character.draw(window)
   for zombie in zombies:
-    if not zombie.dead:
+    if zombie.is_alive():
       zombie.draw(window)
 
   # Interfaz gráfica para combate
@@ -264,7 +268,7 @@ def draw_game() -> None:
       # Resultado
       if combat_result_text:
         result_surface = font.render(combat_result_text, True,
-          Color.CORRECT_ANSWER_BG if "Correcto" in combat_result_text else Color.WRONG_ANSWER_BG)
+                                     Color.CORRECT_ANSWER_BG if "Correcto" in combat_result_text else Color.WRONG_ANSWER_BG)
         window.blit(result_surface, (40, 200))
   pygame.display.flip()
 
@@ -280,7 +284,7 @@ def main_loop() -> None:
   """Main game loop."""
   global repeat
   while repeat:
-    if character.dead:
+    if not character.is_alive():
       level.handle_player_death(window)
       pygame.display.flip()
       clock.tick(60)

@@ -35,7 +35,6 @@ class Character(ABC):
     self.attack_power = attack_power
     self.speed = speed
     self.attack_range = attack_range
-    self.dead = False
     # Position and image
     self.x = x
     self.y = y
@@ -74,12 +73,10 @@ class Character(ABC):
 
   def receive_damage(self, amount: int) -> None:
     """Receives damage and updates the sprite accordingly."""
-    if self.dead:
+    if not self.is_alive():
       return
     self.health -= amount
-    if self.health <= 0:
-      self.dead = True
-      # Si es Hero, intercambia dimensiones del sprite muerto
+    if not self.is_alive():
       if isinstance(self, Hero) and "dead" in self.sprites:
         dead_sprite = self.sprites["dead"]
         # Intercambia dimensiones: ancho <-> alto
@@ -93,7 +90,7 @@ class Character(ABC):
 
   def update_sprite_after_damage(self) -> None:
     """Updates the sprite after damage timer expires."""
-    if self.dead:
+    if not self.is_alive():
       self._set_dead_sprite()
       return
     if self.attack_timer > 0:
@@ -144,7 +141,7 @@ class Character(ABC):
 
   def attack(self, other: 'Character') -> None:
     """Attack another character if within range and cooldown expired. Play hit/miss sound."""
-    if self.dead or other.dead:
+    if not self.is_alive() or not other.is_alive():
       return
     if self.attack_cooldown_timer > 0:
       return
@@ -185,7 +182,7 @@ class Character(ABC):
       return
     if other_characters is not None and dx != 0:
       for other in other_characters:
-        if other is not self and not other.dead and future_rect_x.colliderect(
+        if other is not self and other.is_alive() and future_rect_x.colliderect(
             pygame.Rect(other.x, other.y, sprite_width, sprite_height)):
           # Colisión con otro personaje vivo
           return
@@ -203,7 +200,7 @@ class Character(ABC):
       return
     if other_characters is not None and dy != 0:
       for other in other_characters:
-        if other is not self and not other.dead and future_rect_y.colliderect(
+        if other is not self and other.is_alive() and future_rect_y.colliderect(
             pygame.Rect(other.x, other.y, sprite_width, sprite_height)):
           return
     if dy != 0:
@@ -213,7 +210,7 @@ class Character(ABC):
       window_width: int = 640, window_height: int = 480,
       level: Level = None, other_characters: list['Character'] = None) -> None:
     """Move the character by (dx, dy), handling collisions and updating sprite."""
-    if self.dead:
+    if not self.is_alive():
       return
     sprite_width = DEFAULT_CHARACTER_SIZE[0]
     sprite_height = DEFAULT_CHARACTER_SIZE[1]
