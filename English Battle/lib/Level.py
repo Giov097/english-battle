@@ -1,9 +1,10 @@
 """Module for generating and managing maze levels in a game."""
 from pygame import Rect, Surface
-import pygame
 import random
 from enum import Enum
 
+import pygame
+from pygame.locals import MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION
 from pygame.mixer import Channel
 
 from Sprite.Backgrounds import BACKGROUNDS
@@ -15,9 +16,11 @@ from lib.Var import (
   DEFAULT_DEATH_FADE_DURATION,
   QUESTIONS,
 )
+from lib.Color import Color
 
 
 class LevelType(Enum):
+  """Enumeration for different level types."""
   WORD_ORDERING = "word_ordering"
   FILL_IN_THE_BLANK = "fill_in_the_blank"
   MULTIPLE_CHOICE = "multiple_choice"
@@ -43,8 +46,9 @@ class Level:
     self.difficulty: int = difficulty
     self.level_type: LevelType = level_type
     # Selecciona el set de preguntas según dificultad y tipo
-    self.questions_set = QUESTIONS.get(self.difficulty, {}).get(self.level_type.value,
-                                                                [])
+    self.questions_set = QUESTIONS.get(self.difficulty, {}).get(
+        self.level_type.value,
+        [])
 
   @staticmethod
   def _init_maze_structures(cols: int, rows: int) -> tuple[
@@ -267,3 +271,92 @@ class Combat:
     else:
       self.generate_question()
     return result
+
+
+class WordOrderingModal:
+  """Modal for word ordering questions with drag-and-drop."""
+
+  def __init__(self, question_words, font, rect) -> None:
+    self.font = font
+    self.rect = rect
+    self.shuffled_words = list(question_words)
+    random.shuffle(self.shuffled_words)
+    self.answer_words = []
+    self.dragging = None
+    self.word_rects = {"shuffled": [], "answer": []}
+    self._update_word_rects()
+
+  def _update_word_rects(self) -> None:
+    """Updates the rectangles for word positions."""
+    margin = 10
+    word_w, word_h = 120, 40
+    self.word_rects["shuffled"] = []
+    for i, word in enumerate(self.shuffled_words):
+      x = self.rect.x + margin + i * (word_w + margin)
+      y = self.rect.y + margin
+      self.word_rects["shuffled"].append(pygame.Rect(x, y, word_w, word_h))
+    self.word_rects["answer"] = []
+    for i, word in enumerate(self.answer_words):
+      x = self.rect.x + margin + i * (word_w + margin)
+      y = self.rect.y + self.rect.height // 2
+      self.word_rects["answer"].append(pygame.Rect(x, y, word_w, word_h))
+
+  def draw(self, surface: Surface) -> None:
+    """Draws the modal with words and current state."""
+    pygame.draw.rect(surface, Color.MODAL_BG, self.rect)
+    title = self.font.render("Ordena las palabras:", True, Color.TITLE_TEXT)
+    surface.blit(title, (self.rect.x + 10, self.rect.y + 5))
+    for i, word in enumerate(self.shuffled_words):
+      rect = self.word_rects["shuffled"][i]
+      pygame.draw.rect(surface, Color.WORD_BG, rect)
+      pygame.draw.rect(surface, Color.WORD_BORDER, rect, 2)
+      txt = self.font.render(word, True, Color.TITLE_TEXT)
+      surface.blit(txt, (rect.x + 10, rect.y + 5))
+    for i, word in enumerate(self.answer_words):
+      rect = self.word_rects["answer"][i]
+      pygame.draw.rect(surface, Color.ANSWER_WORD_BG, rect)
+      pygame.draw.rect(surface, Color.WORD_BORDER, rect, 2)
+      txt = self.font.render(word, True, Color.TITLE_TEXT)
+      surface.blit(txt, (rect.x + 10, rect.y + 5))
+    if self.dragging:
+      word, _, _ = self.dragging
+      mx, my = pygame.mouse.get_pos()
+      drag_rect = pygame.Rect(mx - 60, my - 20, 120, 40)
+      txt = self.font.render(word, True, (0, 0, 0))
+      surface.blit(txt, (drag_rect.x + 10, drag_rect.y + 5))
+
+  def handle_event(self, event) -> None:
+    """Handles mouse events for drag-and-drop."""
+    if event.type == MOUSEBUTTONDOWN:
+      mx, my = event.pos
+      for i, rect in enumerate(self.word_rects["shuffled"]):
+        if rect.collidepoint(mx, my):
+          self.dragging = (self.shuffled_words[i], "shuffled", i)
+          return
+      for i, rect in enumerate(self.word_rects["answer"]):
+        if rect.collidepoint(mx, my):
+          self.dragging = (self.answer_words[i], "answer", i)
+          return
+    elif event.type == MOUSEBUTTONUP and self.dragging:
+      mx, my = event.pos
+      word, from_area, idx = self.dragging
+      # Si soltó en área de respuesta
+      answer_area = pygame.Rect(self.rect.x,
+                                self.rect.y + self.rect.height // 2,
+                                self.rect.width, self.rect.height // 2)
+      shuffled_area = pygame.Rect(self.rect.x, self.rect.y,
+                                  self.rect.width, self.rect.height // 2)
+      if from_area == "shuffled" and answer_area.collidepoint(mx, my):
+        self.answer_words.append(word)
+        del self.shuffled_words[idx]
+      elif from_area == "answer" and shuffled_area.collidepoint(mx, my):
+        self.shuffled_words.append(word)
+        del self.answer_words[idx]
+      self.dragging = None
+      self._update_word_rects()
+    elif event.type == MOUSEMOTION and self.dragging:
+      # Pass
+      pass
+
+  def get_player_answer(self) -> str:
+    return " ".join(self.answer_words)

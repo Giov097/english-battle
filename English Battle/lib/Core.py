@@ -16,12 +16,7 @@ from lib.Var import (
   DAMAGE_DISPLAY_FRAMES,
   ATTACK_DISPLAY_FRAMES,
 )
-from lib.Color import (
-  HEALTH_BAR_BG,
-  HEALTH_BAR_GREEN,
-  HEALTH_BAR_RED,
-  HEALTH_BAR_BORDER,
-)
+from lib.Color import Color
 
 
 class Character(ABC):
@@ -278,12 +273,14 @@ class Character(ABC):
                        self.health) / self.max_health if self.max_health > 0 else 0
     fill_width = int(bar_width * health_ratio)
     # Background
-    pygame.draw.rect(surface, HEALTH_BAR_BG, (x, y, bar_width, bar_height))
+    pygame.draw.rect(surface, Color.HEALTH_BAR_BG,
+                     (x, y, bar_width, bar_height))
     # Health bar (green/red)
-    color = HEALTH_BAR_GREEN if health_ratio > 0.3 else HEALTH_BAR_RED
+    color = Color.HEALTH_BAR_GREEN if health_ratio > 0.3 else Color.HEALTH_BAR_RED
     pygame.draw.rect(surface, color, (x, y, fill_width, bar_height))
     # Border
-    pygame.draw.rect(surface, HEALTH_BAR_BORDER, (x, y, bar_width, bar_height), 1)
+    pygame.draw.rect(surface, Color.HEALTH_BAR_BORDER,
+                     (x, y, bar_width, bar_height), 1)
 
   @abstractmethod
   def draw(self, surface: Surface) -> None:
