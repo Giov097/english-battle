@@ -205,9 +205,13 @@ def draw_game() -> None:
   window.fill((255, 255, 255))
   level.draw_background(window)
   level.draw_maze(window)
+  for zombie in zombies:
+    if zombie.dead:
+      zombie.draw(window)
   character.draw(window)
   for zombie in zombies:
-    zombie.draw(window)
+    if not zombie.dead:
+      zombie.draw(window)
 
   # Interfaz gráfica para combate
   if combat_instance is not None and combat_instance.active:
