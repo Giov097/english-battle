@@ -11,6 +11,8 @@ DEFAULT_WALL_THICKNESS = 20
 DEFAULT_CELL_SIZE = 80
 DEFAULT_DEATH_FADE_DURATION = 5.0
 
+FONT = "Roboto"
+
 # Preguntas por dificultad y tipo de nivel
 QUESTIONS = {
   # Fácil
