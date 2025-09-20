@@ -1,13 +1,15 @@
 """Main module for the English Battle game."""
 from typing import Optional
 
-import pygame, sys, random
+import pygame
+import random
+import sys
 from pygame import Surface
 from pygame.time import Clock
 
 from lib.Color import Color
 from lib.Core import Hero, Zombie, Character
-from lib.Level import Level, Combat, BaseCombatModal
+from lib.Level import Level, Combat, LevelType
 
 pygame.init()
 
@@ -18,7 +20,8 @@ character: Character = Hero(50, 50, health=20)
 
 level_difficulty = 2
 NUM_ZOMBIES: int = 5
-level: Level = Level(DEFAULT_WINDOW_SIZE, difficulty=level_difficulty)
+level: Level = Level(DEFAULT_WINDOW_SIZE, difficulty=level_difficulty,
+                     level_type=LevelType.WORD_ORDERING)
 zombies: list[Zombie] = level.generate_zombies(NUM_ZOMBIES)
 
 repeat: bool = True
@@ -36,7 +39,6 @@ combat_instance: Optional[Combat] = None
 combat_input_text = ""
 combat_result_text = ""
 font = pygame.font.SysFont("Roboto", 24)
-word_ordering_modal: Optional[BaseCombatModal] = None
 
 
 def handle_events() -> None:
@@ -49,7 +51,8 @@ def handle_events() -> None:
     level.handle_combat_event(event, font)
     # Input por teclado solo si hay combate y no es word_ordering
     combat_instance = level.get_combat_instance()
-    if combat_instance is not None and combat_instance.active and (combat_instance.current_type != "word_ordering"):
+    if combat_instance is not None and combat_instance.active and (
+        combat_instance.current_type != "word_ordering"):
       handle_combat_input(event)
 
 
@@ -232,7 +235,6 @@ def main_loop() -> None:
   while repeat:
     if not character.is_alive():
       level.handle_player_death(window)
-      pygame.display.flip()
       clock.tick(60)
       continue
     handle_events()

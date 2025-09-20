@@ -343,7 +343,7 @@ class Combat:
 class BaseCombatModal(ABC):
     """Abstract base class for combat modals."""
 
-    def __init__(self, font: FontType, rect: Rect):
+    def __init__(self, font: FontType, rect: Rect) -> None:
         """
         Initializes the modal with font and rectangle.
         """
