@@ -21,7 +21,7 @@ character: Character = Hero(50, 50, health=20)
 level_difficulty = 2
 NUM_ZOMBIES: int = 5
 level: Level = Level(DEFAULT_WINDOW_SIZE, difficulty=level_difficulty,
-                     level_type=LevelType.WORD_ORDERING)
+                     level_type=LevelType.MULTIPLE_CHOICE)
 zombies: list[Zombie] = level.generate_zombies(NUM_ZOMBIES)
 
 repeat: bool = True
@@ -97,11 +97,15 @@ def move_character() -> None:
     moving = True
 
   # Solo permite movimiento si no hay combate activo
+  combat_instance = level.get_combat_instance()
   if combat_instance is None or not combat_instance.active:
     character.move(dx, dy, moving, DEFAULT_WINDOW_SIZE[0],
                    DEFAULT_WINDOW_SIZE[1],
                    level=level, other_characters=zombies)
   # Si hay combate, nadie se mueve (ni héroe ni zombies)
+  else:
+    # Bloquea movimiento del héroe y zombies durante combate
+    pass
 
 
 def handle_combat_trigger() -> None:
@@ -169,6 +173,7 @@ def move_zombies() -> None:
   global zombie_move_counter, zombies, character, combat_instance
   zombie_move_counter += 1
   if zombie_move_counter >= ZOMBIE_MOVE_INTERVAL:
+    combat_instance = level.get_combat_instance()
     if combat_instance is None or not combat_instance.active:
       for zombie in zombies:
         if not zombie.is_alive():
@@ -199,14 +204,16 @@ def draw_game() -> None:
 
   # Interfaz gráfica para combate
   combat_instance = level.get_combat_instance()
-  word_ordering_modal = level.get_combat_modal()
+  combat_modal = level.get_combat_modal()
   if combat_instance is not None and combat_instance.active:
     overlay = pygame.Surface(DEFAULT_WINDOW_SIZE)
     overlay.set_alpha(180)
     overlay.fill((0, 0, 0))
     window.blit(overlay, (0, 0))
-    if combat_instance.current_type == "word_ordering" and word_ordering_modal:
-      word_ordering_modal.draw(window)
+    if combat_instance.current_type == LevelType.WORD_ORDERING.value and combat_modal:
+      combat_modal.draw(window)
+    elif combat_instance.current_type == LevelType.MULTIPLE_CHOICE.value and combat_modal:
+      combat_modal.draw(window)
     else:
       question_text = f"Ordena la oración correctamente: {combat_instance.current_question}"
       question_surface = font.render(question_text, True,
