@@ -47,10 +47,9 @@ class Level:
     self.maze_walls: list[Rect] = self._generate_random_maze(self.window_size)
     self._death_fade_active: bool = False
     self._death_fade_start_time: int | None = None
-    self._death_fade_duration: float = DEFAULT_DEATH_FADE_DURATION  # seconds
+    self._death_fade_duration: float = DEFAULT_DEATH_FADE_DURATION
     self.difficulty: int = difficulty
     self.level_type: LevelType = level_type
-    # Selecciona el set de preguntas según dificultad y tipo
     self.questions_set = QUESTIONS.get(self.difficulty, {}).get(
         self.level_type.value,
         [])
@@ -169,12 +168,10 @@ class Level:
       self._death_fade_active = True
       self._death_fade_start_time = pygame.time.get_ticks()
       self._play_death_sounds()
-    # Calcula el progreso del fade
     elapsed = (pygame.time.get_ticks() - self._death_fade_start_time) / 1000.0
     alpha = min(255, int((elapsed / self._death_fade_duration) * 255))
     self._draw_death_fade(window_surface, alpha)
     self.update_death_sounds()
-    # Si terminó el fade, puede mostrar mensaje final o terminar el juego
     if elapsed >= self._death_fade_duration:
       pygame.quit()
 
@@ -244,7 +241,6 @@ class Level:
         if zombie.is_alive() and character.can_attack(zombie):
           self.combat_instance = Combat(character, zombie, self.questions_set)
           question = self.combat_instance.generate_question()
-          # Inicializa el modal según el tipo de pregunta
           if self.combat_instance.current_type == "word_ordering":
             words = question.split(" / ")
             self.combat_modal = WordOrderingModal(words, font,
@@ -270,7 +266,6 @@ class Level:
           result = self.combat_instance.process_turn(player_answer)
           self.combat_modal.result_text = result
           if self.combat_instance.active:
-            # Nueva pregunta/modal según tipo
             if self.combat_instance.current_type == "word_ordering":
               words = self.combat_instance.current_question.split(" / ")
               self.combat_modal = WordOrderingModal(words, font,
@@ -324,9 +319,7 @@ class Combat:
       self.current_answer = None
       return ""
     sample = questions[0]
-    # Detect type by tuple length
     if isinstance(sample, tuple) and len(sample) == 2:
-      # word_ordering
       same_question = True
       while same_question:
         words, answer = random.choice(questions)
@@ -341,7 +334,6 @@ class Combat:
       self._last_question = question_str
       return self.current_question
     elif isinstance(sample, tuple) and len(sample) == 3:
-      # multiple_choice
       same_question = True
       while same_question:
         q, options, answer = random.choice(questions)
@@ -503,7 +495,6 @@ class WordOrderingModal(BaseCombatModal):
         pygame.draw.rect(surface, Color.WORD_BORDER, rect, 2)
         txt = self.font.render(word, True, Color.TITLE_TEXT)
       surface.blit(txt, (rect.x + 6, rect.y + 4))
-    # Highlighted answer area
     answer_area_rect = pygame.Rect(
         self.rect.x + 5,
         self.rect.y + self.rect.height // 2 - 8,
@@ -545,17 +536,14 @@ class WordOrderingModal(BaseCombatModal):
     """
     if event.type == MOUSEBUTTONDOWN:
       mx, my = event.pos
-      # Confirm button
       if self.confirm_btn_rect.collidepoint(mx, my):
         self.confirmed = True
         return
-      # Reset button
       if self.reset_btn_rect.collidepoint(mx, my):
         self.answer_words = []
         self.confirmed = False
         self._update_word_rects()
         return
-      # Words
       for i, rect in enumerate(self.word_rects["shuffled"]):
         word = self.shuffled_words[i]
         if rect.collidepoint(mx, my) and word not in self.answer_words:
@@ -647,7 +635,6 @@ class MultipleChoiceModal(BaseCombatModal):
       pygame.draw.rect(surface, border_color, rect, 2)
       txt = self.font.render(option, True, Color.TITLE_TEXT)
       surface.blit(txt, (rect.x + 8, rect.y + 6))
-      # Selection mark
       if self.selected_index == i:
         pygame.draw.circle(surface, Color.ANSWER_AREA_BORDER,
                            (rect.right - 18, rect.centery), 10, 0)
@@ -665,16 +652,13 @@ class MultipleChoiceModal(BaseCombatModal):
     """
     if event.type == MOUSEBUTTONDOWN:
       mx, my = event.pos
-      # Confirm button
       if self.confirm_btn_rect.collidepoint(mx, my):
         self.confirmed = True
         return
-      # Reset button
       if self.reset_btn_rect.collidepoint(mx, my):
         self.selected_index = None
         self.confirmed = False
         return
-      # Opciones
       for i, rect in enumerate(self.option_rects):
         if rect.collidepoint(mx, my):
           self.selected_index = i

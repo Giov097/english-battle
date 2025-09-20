@@ -14,14 +14,16 @@ from lib.Color import Color
 from lib.Core import Hero, Zombie, Character
 from lib.Level import Level, Combat, LevelType
 from Sprite.Backgrounds import BACKGROUNDS
-from lib.Var import FONT
+from lib.Var import FONT, LEVELS_CONFIG
 
 pygame.init()
 
 DEFAULT_WINDOW_SIZE: tuple[int, int] = (640, 480)
 window: Surface = pygame.display.set_mode(DEFAULT_WINDOW_SIZE)
 pygame.display.set_caption("English Battle")
-character: Character = Hero(50, 50, health=20)
+character: Character = None
+level: Level = None
+zombies: list[Zombie] = []
 
 NUM_ZOMBIES: int = 5
 level: Level = Level(DEFAULT_WINDOW_SIZE, difficulty=1,
@@ -32,11 +34,9 @@ repeat: bool = True
 # Para limitar los FPS
 clock: Clock = pygame.time.Clock()
 
-# Para controlar el movimiento aleatorio de los zombies
 ZOMBIE_MOVE_INTERVAL: int = 10
 zombie_move_counter: int = 0
 
-# Para detectar pulsación de la tecla
 attack_pressed: bool = False
 
 combat_instance: Optional[Combat] = None
@@ -51,9 +51,7 @@ def handle_events() -> None:
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
       repeat = False
-    # Delegar eventos de combate y modal a Level
     level.handle_combat_event(event, font)
-    # Input por teclado solo si hay combate y no es word_ordering
     combat_instance = level.get_combat_instance()
     if combat_instance is not None and combat_instance.active and (
         combat_instance.current_type != "word_ordering"):
@@ -278,13 +276,74 @@ def draw_level_select(win: Surface, menu_font: FontType,
   win.blit(overlay, (0, 0))
   title = menu_font.render("Selecciona nivel", True, (255, 255, 255))
   win.blit(title, (DEFAULT_WINDOW_SIZE[0] // 2 - title.get_width() // 2, 60))
-  for idx, lvl in enumerate(levels):
-    color = (0, 255, 0) if idx == selected_idx else (255, 255, 255)
-    txt = menu_font.render(lvl, True, color)
+
+  # Reduce font size for levels
+  level_font = pygame.font.SysFont(FONT, 20)
+  max_visible = 7
+  half = max_visible // 2
+  start_idx = max(0, selected_idx - half)
+  end_idx = min(len(levels), start_idx + max_visible)
+  if end_idx - start_idx < max_visible:
+    start_idx = max(0, end_idx - max_visible)
+  visible_levels = levels[start_idx:end_idx]
+
+  for idx, lvl in enumerate(visible_levels):
+    real_idx = start_idx + idx
+    color = (0, 255, 0) if real_idx == selected_idx else (255, 255, 255)
+    txt = level_font.render(lvl, True, color)
     x = DEFAULT_WINDOW_SIZE[0] // 2 - txt.get_width() // 2
-    y = 160 + idx * 60
+    y = 160 + idx * 36
     win.blit(txt, (x, y))
   pygame.display.flip()
+
+
+def get_level_type(type_str: str):
+  """Returns the LevelType enum from string."""
+  if type_str == "multiple_choice":
+    return LevelType.MULTIPLE_CHOICE
+  elif type_str == "word_ordering":
+    return LevelType.WORD_ORDERING
+  elif type_str == "fill_in_the_blank":
+    return LevelType.FILL_IN_THE_BLANK
+  else:
+    return LevelType.MULTIPLE_CHOICE
+
+
+def level_select_menu(bg_img: Surface) -> Optional[int]:
+  """Displays the level selection menu and handles navigation."""
+  font_menu = pygame.font.SysFont(FONT, 32)
+  levels = [lvl["name"] for lvl in LEVELS_CONFIG]
+  levels.append("Volver")
+  selected = 0
+  level_selected = False
+  channel: Channel = pygame.mixer.find_channel()
+  while not level_selected:
+    draw_level_select(window, font_menu, bg_img, selected, levels)
+    for event in pygame.event.get():
+      if event.type == pygame.QUIT:
+        close_game()
+      elif event.type == pygame.KEYDOWN:
+        channel.play(SOUNDS["blip1"])
+        if event.key == pygame.K_UP or event.key == pygame.K_LEFT:
+          selected = (selected - 1) % len(levels)
+        elif event.key == pygame.K_DOWN or event.key == pygame.K_RIGHT:
+          selected = (selected + 1) % len(levels)
+        elif event.key == pygame.K_RETURN:
+          level_selected = True
+  if levels[selected] == "Volver":
+    return None
+  return selected
+
+
+def setup_level(level_idx: int) -> None:
+  """Initializes the level and characters according to selected config."""
+  global character, level, zombies
+  config = LEVELS_CONFIG[level_idx]
+  character = Hero(50, 50, health=20)
+  level_type = get_level_type(config["type"])
+  level = Level(DEFAULT_WINDOW_SIZE, difficulty=config["difficulty"],
+                level_type=level_type)
+  zombies = level.generate_zombies(config["num_zombies"])
 
 
 def main_menu() -> None:
@@ -295,8 +354,9 @@ def main_menu() -> None:
   options = ["Nuevo juego", "Salir"]
   idx_selected = 0
   channel: Channel = pygame.mixer.find_channel()
-  selected = False
-  while not selected:
+  menu_active = True
+  selected_level = False
+  while menu_active:
     draw_menu(window, font_menu, bg_img, idx_selected, options)
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
@@ -310,37 +370,22 @@ def main_menu() -> None:
         elif event.key == pygame.K_RETURN:
           if options[idx_selected] == "Nuevo juego":
             level_idx = level_select_menu(bg_img)
-            if level_idx == 0:
-              selected = True
+            if level_idx is None:
+              selected_level = False
+              continue
+            setup_level(level_idx)
+            selected_level = True
+            menu_active = False
           elif options[idx_selected] == "Salir":
             close_game()
+    if selected_level:
+      menu_active = False
 
 
 def close_game() -> None:
   """Closes the game."""
   pygame.quit()
   sys.exit()
-
-
-def level_select_menu(bg_img: Surface) -> int:
-  """Displays the level selection menu and handles navigation."""
-  font_menu = pygame.font.SysFont(FONT, 32)
-  levels = ["Nivel 1"]
-  selected = 0
-  level_selected = False
-  while not level_selected:
-    draw_level_select(window, font_menu, bg_img, selected, levels)
-    for event in pygame.event.get():
-      if event.type == pygame.QUIT:
-        close_game()
-      elif event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_UP or event.key == pygame.K_LEFT:
-          selected = (selected - 1) % len(levels)
-        elif event.key == pygame.K_DOWN or event.key == pygame.K_RIGHT:
-          selected = (selected + 1) % len(levels)
-        elif event.key == pygame.K_RETURN:
-          level_selected = True
-  return selected
 
 
 def main_loop() -> None:

@@ -79,7 +79,6 @@ class Character(ABC):
     if not self.is_alive():
       if isinstance(self, Hero) and "dead" in self.sprites:
         dead_sprite = self.sprites["dead"]
-        # Intercambia dimensiones: ancho <-> alto
         new_size = (DEFAULT_CHARACTER_SIZE[1], DEFAULT_CHARACTER_SIZE[0])
         self.image = pygame.transform.scale(dead_sprite, new_size)
       else:
