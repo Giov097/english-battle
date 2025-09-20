@@ -10,6 +10,7 @@ from pygame.locals import MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION
 from pygame.mixer import Channel
 
 from Sprite.Backgrounds import BACKGROUNDS
+from Sprite.Levels import DOOR_1_SPRITES
 from Sound import SOUNDS
 from lib.Var import (
   DEFAULT_WINDOW_SIZE,
@@ -55,6 +56,22 @@ class Level:
         [])
     self.combat_instance = None
     self.combat_modal = None
+
+    # Spawn door in a valid position
+    self.door = self._spawn_door()
+
+  def _spawn_door(self) -> 'Door':
+    """Spawns a door in a valid position (not colliding with maze walls)."""
+    sprite_w, sprite_h = 40, 60
+    max_attempts = 100
+    for _ in range(max_attempts):
+      x = random.randint(0, self.window_size[0] - sprite_w)
+      y = random.randint(0, self.window_size[1] - sprite_h)
+      rect = pygame.Rect(x, y, sprite_w, sprite_h)
+      if not self.check_collision(rect):
+        return Door((x, y), DOOR_1_SPRITES)
+    # Si no encuentra lugar, la pone en (0,0)
+    return Door((0, 0), DOOR_1_SPRITES)
 
   @staticmethod
   def _init_maze_structures(cols: int, rows: int) -> tuple[
@@ -149,9 +166,14 @@ class Level:
     surface.blit(self.background, (0, 0))
 
   def draw_maze(self, surface: Surface) -> None:
-    """Draws the maze walls on the given surface."""
+    """Draws the maze walls and the door on the given surface."""
     for wall in self.maze_walls:
       pygame.draw.rect(surface, (80, 80, 80), wall)
+    # Dibuja la puerta
+    if self.door:
+      if self.door.state == "opening":
+        self.door.animate_opening()
+      self.door.draw(surface)
 
   def check_collision(self, rect: Rect) -> bool:
     """Returns True if rect collides with any maze wall."""
@@ -230,11 +252,11 @@ class Level:
         rect = pygame.Rect(x, y, sprite_w, sprite_h)
         if not self.check_collision(rect):
           valid_spawn = True
-      health = 20 + (self.difficulty - 1) * 5
+      health = 10 + (self.difficulty - 1) * 5
       zombies.append(Zombie(x, y, health=health))
     return zombies
 
-  def start_combat(self, character, zombies, font):
+  def start_combat(self, character, zombies, font) -> bool:
     """Starts combat if the hero is near a zombie."""
     if self.combat_instance is None or not self.combat_instance.active:
       for zombie in zombies:
@@ -256,7 +278,7 @@ class Level:
           return True
     return False
 
-  def handle_combat_event(self, event, font):
+  def handle_combat_event(self, event, font) -> None:
     """Handles events for combat and the modal."""
     if self.combat_instance is not None and self.combat_instance.active and self.combat_modal:
       self.combat_modal.handle_event(event)
@@ -285,13 +307,19 @@ class Level:
           self.combat_modal.confirmed = False
     return
 
-  def get_combat_modal(self):
+  def get_combat_modal(self) -> 'BaseCombatModal':
     """Returns the current modal if it exists."""
     return self.combat_modal
 
-  def get_combat_instance(self):
+  def get_combat_instance(self) -> 'Combat':
     """Returns the current combat instance."""
     return self.combat_instance
+
+  def check_open_door(self, zombies: list['Zombie']) -> None:
+    """Opens the door if all zombies are defeated."""
+    if self.door and self.door.state == "closed":
+      if all(not z.is_alive() for z in zombies):
+        self.door.open()
 
 
 class Combat:
@@ -615,7 +643,7 @@ class MultipleChoiceModal(BaseCombatModal):
     for i, _ in enumerate(self.options):
       y = start_y + i * (option_h + margin)
       self.option_rects.append(
-        pygame.Rect(self.rect.x + margin, y, option_w, option_h))
+          pygame.Rect(self.rect.x + margin, y, option_w, option_h))
 
   def draw(self, surface: Surface) -> None:
     """
@@ -678,3 +706,55 @@ class MultipleChoiceModal(BaseCombatModal):
     """
     self.selected_index = None
     self.confirmed = False
+
+
+class Door:
+  """Class representing a door in the level."""
+
+  def __init__(self, position: tuple[int, int],
+      sprite_dict: dict[str, 'Surface']) -> None:
+    """
+    Initializes the Door object.
+    """
+    self.position = position
+    self.sprites = sprite_dict
+    self.state = "closed"
+    self.opening_frame = 0
+    self.image = self.sprites["closed"]
+    self.open_sounds = [SOUNDS.get("doormove9"), SOUNDS.get("doormove10")]
+
+  def open(self) -> None:
+    """
+    Starts the opening animation.
+    """
+    if self.state == "closed":
+      if self.open_sounds:
+        channel = pygame.mixer.find_channel()
+        if channel:
+          random.choice(self.open_sounds).play()
+      self.state = "opening"
+      self.opening_frame = 0
+
+  def animate_opening(self) -> None:
+    """
+    Animates the door opening using available sprites.
+    """
+    if self.state == "opening":
+      frames = [
+        self.sprites.get("opening-1"),
+        self.sprites.get("opening-2"),
+        self.sprites.get("opening-3"),
+        self.sprites.get("open")
+      ]
+      if self.opening_frame < len(frames):
+        self.image = frames[self.opening_frame]
+        self.opening_frame += 1
+      else:
+        self.image = self.sprites["open"]
+        self.state = "open"
+
+  def draw(self, surface: 'Surface') -> None:
+    """
+    Draws the door on the given surface.
+    """
+    surface.blit(self.image, self.position)

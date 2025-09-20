@@ -403,6 +403,7 @@ def main_loop() -> None:
     handle_attack()
     move_zombies()
     update_all_sprites()
+    level.check_open_door(zombies)
     draw_game()
     clock.tick(60)
   close_game()
