@@ -14,31 +14,12 @@ pygame.init()
 DEFAULT_WINDOW_SIZE: tuple[int, int] = (640, 480)
 window: Surface = pygame.display.set_mode(DEFAULT_WINDOW_SIZE)
 pygame.display.set_caption("English Battle")
-# Nueva posición inicial
 character: Character = Hero(50, 50, health=20)
-level: Level = Level(DEFAULT_WINDOW_SIZE)
 
-
-def get_valid_spawn(lvl: Level, window_size: tuple[int, int]) -> tuple[
-  int, int]:
-  """Generates a valid spawn position."""
-  sprite_w, sprite_h = (23, 30)
-  x, y = 0, 0
-  valid_spawn_point = False
-  while not valid_spawn_point:
-    x = random.randint(0, window_size[0] - sprite_w)
-    y = random.randint(0, window_size[1] - sprite_h)
-    rect = pygame.Rect(x, y, sprite_w, sprite_h)
-    if not lvl.check_collision(rect):
-      valid_spawn_point = True
-  return x, y
-
-
+level_difficulty = 2
 NUM_ZOMBIES: int = 5
-zombies: list[Zombie] = []
-for _ in range(NUM_ZOMBIES):
-  zx, zy = get_valid_spawn(level, DEFAULT_WINDOW_SIZE)
-  zombies.append(Zombie(zx, zy, health=20))
+level: Level = Level(DEFAULT_WINDOW_SIZE, difficulty=level_difficulty)
+zombies: list[Zombie] = level.generate_zombies(NUM_ZOMBIES)
 
 repeat: bool = True
 # Para limitar los FPS

@@ -214,6 +214,23 @@ class Level:
     if hasattr(self, "_check_death_sound_end"):
       self._check_death_sound_end()
 
+  def generate_zombies(self, num_zombies: int) -> list['Zombie']:
+    """Generates zombies at random positions not colliding with walls."""
+    from lib.Core import Zombie
+    zombies: list[Zombie] = []
+    sprite_w, sprite_h = (23, 30)
+    for _ in range(num_zombies):
+      valid_spawn = False
+      while not valid_spawn:
+        x = random.randint(0, self.window_size[0] - sprite_w)
+        y = random.randint(0, self.window_size[1] - sprite_h)
+        rect = pygame.Rect(x, y, sprite_w, sprite_h)
+        if not self.check_collision(rect):
+          valid_spawn = True
+      health = 20 + (self.difficulty - 1) * 5
+      zombies.append(Zombie(x, y, health=health))
+    return zombies
+
 
 class Combat:
   """Class to manage combat encounters with grammar questions."""
@@ -297,9 +314,9 @@ class WordOrderingModal:
     margin = 10
     y_btn = self.rect.y + self.rect.height - btn_h - margin
     self.confirm_btn_rect = pygame.Rect(
-        self.rect.x + margin, y_btn, btn_w, btn_h)
-    self.reset_btn_rect = pygame.Rect(
         self.rect.x + self.rect.width - btn_w - margin, y_btn, btn_w, btn_h)
+    self.reset_btn_rect = pygame.Rect(
+        self.rect.x + margin, y_btn, btn_w, btn_h)
 
   def _update_word_rects(self) -> None:
     """Updates the rectangles for the words in both areas."""
