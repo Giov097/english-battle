@@ -280,7 +280,8 @@ class WordOrderingModal:
   def __init__(self, question_words, font: FontType, rect: Rect) -> None:
     self.font = font
     self.rect = rect
-    self.shuffled_words = list(question_words)
+    self.original_words = list(question_words)
+    self.shuffled_words = list(self.original_words)
     random.shuffle(self.shuffled_words)
     self.answer_words = []
     self.dragging = None
@@ -304,7 +305,7 @@ class WordOrderingModal:
   def _update_word_rects(self) -> None:
     """Updates the rectangles for the words in both areas."""
     margin = 10
-    word_w, word_h = 90, 32  # Palabras más chicas
+    word_w, word_h = 90, 32
     title_height = 35
     self.word_rects["shuffled"] = []
     for i, word in enumerate(self.shuffled_words):
@@ -324,10 +325,30 @@ class WordOrderingModal:
     surface.blit(title, (self.rect.x + 10, self.rect.y + 5))
     for i, word in enumerate(self.shuffled_words):
       rect = self.word_rects["shuffled"][i]
-      pygame.draw.rect(surface, Color.WORD_BG, rect)
-      pygame.draw.rect(surface, Color.WORD_BORDER, rect, 2)
-      txt = self.font.render(word, True, Color.TITLE_TEXT)
+      if word in self.answer_words:
+        pygame.draw.rect(surface, Color.WORD_BG_DISABLED, rect)
+        pygame.draw.rect(surface, Color.WORD_BORDER, rect, 2)
+        txt = self.font.render(word, True, Color.WORD_TEXT_DISABLED)
+      else:
+        pygame.draw.rect(surface, Color.WORD_BG, rect)
+        pygame.draw.rect(surface, Color.WORD_BORDER, rect, 2)
+        txt = self.font.render(word, True, Color.TITLE_TEXT)
       surface.blit(txt, (rect.x + 6, rect.y + 4))
+    # Área de destino resaltada
+    answer_area_rect = pygame.Rect(
+      self.rect.x + 5,
+      self.rect.y + self.rect.height // 2 - 8,
+      self.rect.width - 10,
+      48
+    )
+    pygame.draw.rect(surface, Color.ANSWER_AREA_BG, answer_area_rect)
+    pygame.draw.rect(surface, Color.ANSWER_AREA_BORDER, answer_area_rect, 2)
+    # Texto indicativo SOLO si no hay palabras en respuesta
+    if not self.answer_words:
+      hint_txt = self.font.render("Arrastra aquí para formar la oración", True, Color.ANSWER_AREA_BORDER)
+      hint_rect = hint_txt.get_rect(center=(answer_area_rect.centerx, answer_area_rect.y + 24))
+      surface.blit(hint_txt, hint_rect)
+    # Palabras en respuesta
     for i, word in enumerate(self.answer_words):
       rect = self.word_rects["answer"][i]
       pygame.draw.rect(surface, Color.ANSWER_WORD_BG, rect)
@@ -373,19 +394,20 @@ class WordOrderingModal:
         return
       # Botón Reiniciar
       if self.reset_btn_rect.collidepoint(mx, my):
-        self.shuffled_words += self.answer_words
         self.answer_words = []
         self.confirmed = False
         self._update_word_rects()
         return
       # Palabras
       for i, rect in enumerate(self.word_rects["shuffled"]):
-        if rect.collidepoint(mx, my):
-          self.dragging = (self.shuffled_words[i], "shuffled", i)
+        word = self.shuffled_words[i]
+        if rect.collidepoint(mx, my) and word not in self.answer_words:
+          self.dragging = (word, "shuffled", i)
           return
       for i, rect in enumerate(self.word_rects["answer"]):
+        word = self.answer_words[i]
         if rect.collidepoint(mx, my):
-          self.dragging = (self.answer_words[i], "answer", i)
+          self.dragging = (word, "answer", i)
           return
     elif event.type == MOUSEBUTTONUP and self.dragging:
       mx, my = event.pos
@@ -396,11 +418,11 @@ class WordOrderingModal:
       shuffled_area = pygame.Rect(self.rect.x, self.rect.y,
                                   self.rect.width, self.rect.height // 2)
       if from_area == "shuffled" and answer_area.collidepoint(mx, my):
-        self.answer_words.append(word)
-        del self.shuffled_words[idx]
+        if word not in self.answer_words:
+          self.answer_words.append(word)
       elif from_area == "answer" and shuffled_area.collidepoint(mx, my):
-        self.shuffled_words.append(word)
-        del self.answer_words[idx]
+        if word in self.answer_words:
+          self.answer_words.remove(word)
       self.dragging = None
       self._update_word_rects()
     elif event.type == MOUSEMOTION and self.dragging:
@@ -410,7 +432,6 @@ class WordOrderingModal:
     return " ".join(self.answer_words)
 
   def reset(self):
-    self.shuffled_words += self.answer_words
     self.answer_words = []
     self.confirmed = False
     self._update_word_rects()

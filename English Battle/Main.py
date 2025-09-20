@@ -79,7 +79,7 @@ def handle_events() -> None:
             word_ordering_modal.result_text = combat_result_text
             if combat_instance.active:
               words = combat_instance.current_question.split(" / ")
-              word_ordering_modal = WordOrderingModal(words, font, pygame.Rect(40, 100, 560, 220))
+              word_ordering_modal = WordOrderingModal(words, font, pygame.Rect(40, 100, 560, 260))
               word_ordering_modal.result_text = ""
             else:
               word_ordering_modal = None
@@ -151,7 +151,7 @@ def handle_combat_trigger() -> None:
         # Inicializa el modal si es word_ordering
         if combat_instance.current_type == "word_ordering":
           words = question.split(" / ")
-          word_ordering_modal = WordOrderingModal(words, font, pygame.Rect(40, 100, 560, 160))
+          word_ordering_modal = WordOrderingModal(words, font, pygame.Rect(40, 100, 560, 260))
         else:
           word_ordering_modal = None
         break
