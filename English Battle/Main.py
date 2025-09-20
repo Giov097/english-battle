@@ -7,7 +7,7 @@ from pygame.time import Clock
 
 from lib.Color import Color
 from lib.Core import Hero, Zombie, Character
-from lib.Level import Level, Combat, WordOrderingModal
+from lib.Level import Level, Combat, BaseCombatModal
 
 pygame.init()
 
@@ -36,40 +36,20 @@ combat_instance: Optional[Combat] = None
 combat_input_text = ""
 combat_result_text = ""
 font = pygame.font.SysFont("Roboto", 24)
-word_ordering_modal: Optional[WordOrderingModal] = None
+word_ordering_modal: Optional[BaseCombatModal] = None
 
 
 def handle_events() -> None:
   """Handles all pygame events."""
-  global repeat, combat_instance, combat_input_text, combat_result_text, word_ordering_modal
+  global repeat, combat_input_text, combat_result_text
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
       repeat = False
-    if combat_instance is not None and combat_instance.active and combat_instance.current_type == "word_ordering":
-      if word_ordering_modal:
-        word_ordering_modal.handle_event(event)
-        if word_ordering_modal.confirmed:
-          player_answer = word_ordering_modal.get_player_answer()
-          if player_answer.strip():
-            character.update_sprite_after_damage()
-            for zombie in zombies:
-              zombie.update_sprite_after_damage()
-            draw_game()
-            combat_result_text = combat_instance.process_turn(player_answer)
-            # Pasa el resultado al modal
-            word_ordering_modal.result_text = combat_result_text
-            if combat_instance.active:
-              words = combat_instance.current_question.split(" / ")
-              word_ordering_modal = WordOrderingModal(words, font,
-                                                      pygame.Rect(40, 100, 560,
-                                                                  260))
-              word_ordering_modal.result_text = ""
-            else:
-              word_ordering_modal = None
-          else:
-            # Si no hay respuesta, solo desactiva el confirmado
-            word_ordering_modal.confirmed = False
-    else:
+    # Delegar eventos de combate y modal a Level
+    level.handle_combat_event(event, font)
+    # Input por teclado solo si hay combate y no es word_ordering
+    combat_instance = level.get_combat_instance()
+    if combat_instance is not None and combat_instance.active and (combat_instance.current_type != "word_ordering"):
       handle_combat_input(event)
 
 
@@ -123,23 +103,11 @@ def move_character() -> None:
 
 def handle_combat_trigger() -> None:
   """Detects and initiates combat if the hero is near a zombie."""
-  global combat_instance, combat_result_text, combat_input_text, word_ordering_modal
-  if combat_instance is None or not combat_instance.active:
-    for zombie in zombies:
-      if zombie.is_alive() and character.can_attack(zombie):
-        combat_instance = Combat(character, zombie, level.questions_set)
-        question = combat_instance.generate_question()
-        combat_result_text = ""
-        combat_input_text = ""
-        # Inicializa el modal si es word_ordering
-        if combat_instance.current_type == "word_ordering":
-          words = question.split(" / ")
-          word_ordering_modal = WordOrderingModal(words, font,
-                                                  pygame.Rect(40, 100, 560,
-                                                              260))
-        else:
-          word_ordering_modal = None
-        break
+  global combat_result_text, combat_input_text
+  started = level.start_combat(character, zombies, font)
+  if started:
+    combat_result_text = ""
+    combat_input_text = ""
 
 
 def handle_attack() -> None:
@@ -227,26 +195,23 @@ def draw_game() -> None:
       zombie.draw(window)
 
   # Interfaz gráfica para combate
+  combat_instance = level.get_combat_instance()
+  word_ordering_modal = level.get_combat_modal()
   if combat_instance is not None and combat_instance.active:
-    # Fondo semitransparente
     overlay = pygame.Surface(DEFAULT_WINDOW_SIZE)
     overlay.set_alpha(180)
     overlay.fill((0, 0, 0))
     window.blit(overlay, (0, 0))
     if combat_instance.current_type == "word_ordering" and word_ordering_modal:
-      word_ordering_modal.result_text = combat_result_text  # Actualiza el texto del modal
       word_ordering_modal.draw(window)
     else:
-      # Pregunta
       question_text = f"Ordena la oración correctamente: {combat_instance.current_question}"
       question_surface = font.render(question_text, True,
                                      Color.QUESTION_SURFACE_BG)
       window.blit(question_surface, (40, 100))
-      # Input del jugador
       input_surface = font.render("Tu respuesta: " + combat_input_text, True,
                                   Color.ANSWER_SURFACE_BG)
       window.blit(input_surface, (40, 150))
-      # Resultado
       if combat_result_text:
         result_surface = font.render(combat_result_text, True,
                                      Color.CORRECT_ANSWER_BG if "Correcto" in combat_result_text else Color.WRONG_ANSWER_BG)
