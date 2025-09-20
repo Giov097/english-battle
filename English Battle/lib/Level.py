@@ -1,8 +1,8 @@
 """Module for generating and managing maze levels in a game."""
-
 from pygame import Rect, Surface
 import pygame
 import random
+from enum import Enum
 
 from pygame.mixer import Channel
 
@@ -13,14 +13,23 @@ from lib.Var import (
   DEFAULT_WALL_THICKNESS,
   DEFAULT_CELL_SIZE,
   DEFAULT_DEATH_FADE_DURATION,
+  QUESTIONS,
 )
+
+
+class LevelType(Enum):
+  WORD_ORDERING = "word_ordering"
+  FILL_IN_THE_BLANK = "fill_in_the_blank"
+  MULTIPLE_CHOICE = "multiple_choice"
 
 
 class Level:
   """Class to manage the game level, including background and maze."""
 
   def __init__(self, window_size: tuple[int, int] = DEFAULT_WINDOW_SIZE,
-      background_name: str = "grass") -> None:
+      background_name: str = "grass",
+      difficulty: int = 1,
+      level_type: LevelType = LevelType.WORD_ORDERING) -> None:
     self._death_handled: None = None
     self.window_size: tuple[int, int] = window_size
     self.background_name: str = background_name
@@ -31,6 +40,11 @@ class Level:
     self._death_fade_active: bool = False
     self._death_fade_start_time: int | None = None
     self._death_fade_duration: float = DEFAULT_DEATH_FADE_DURATION  # seconds
+    self.difficulty: int = difficulty
+    self.level_type: LevelType = level_type
+    # Selecciona el set de preguntas según dificultad y tipo
+    self.questions_set = QUESTIONS.get(self.difficulty, {}).get(self.level_type.value,
+                                                                [])
 
   @staticmethod
   def _init_maze_structures(cols: int, rows: int) -> tuple[
@@ -73,7 +87,7 @@ class Level:
       wall_thickness: int,
       window_size: tuple[int, int],
       vertical_walls: list[list[int]], horizontal_walls: list[list[int]]) -> \
-  list[Rect]:
+      list[Rect]:
     """Builds the maze walls from the wall structures."""
     w, h = window_size
     walls: list[Rect] = []
@@ -199,7 +213,8 @@ class Level:
 class Combat:
   """Class to manage combat encounters with grammar questions."""
 
-  def __init__(self, hero: 'Hero', enemy: 'Character') -> None:
+  def __init__(self, hero: 'Hero', enemy: 'Character',
+      questions_set: list[dict[str, list[str]]]) -> None:
     self.hero: 'Hero' = hero
     self.enemy: 'Character' = enemy
     self.active: bool = True
@@ -207,45 +222,15 @@ class Combat:
     self.current_answer: str | None = None
     self.current_type: str | None = None
     self._last_question: str | None = None
+    self.questions_set = questions_set if questions_set is not None else []
 
   def generate_question(self) -> str:
     """Generates a new word ordering grammar question."""
-    questions = [
-      (("I", "am", "a", "student"), "I am student"),
-      (("She", "is", "happy"), "She is happy"),
-      (("They", "are", "playing"), "They are playing"),
-      (("We", "have", "a", "dog"), "We have a dog"),
-      (("He", "likes", "pizza"), "He likes pizza"),
-      (("You", "are", "my", "friend"), "You are my friend"),
-      (("The", "cat", "is", "on", "the", "roof"), "The cat is on the roof"),
-      (("My", "brother", "is", "tall"), "My brother is tall"),
-      (("It", "is", "raining"), "It is raining"),
-      (("We", "are", "going", "to", "the", "park"), "We are going to the park"),
-      (("She", "has", "a", "car"), "She has a car"),
-      (("They", "are", "friends"), "They are friends"),
-      (("I", "love", "music"), "I love music"),
-      (("The", "dog", "is", "barking"), "The dog is barking"),
-      (("He", "is", "reading", "a", "book"), "He is reading a book"),
-      (("You", "have", "a", "nice", "house"), "You have a nice house"),
-      (("We", "are", "happy"), "We are happy"),
-      (("The", "children", "are", "playing"), "The children are playing"),
-      (("She", "is", "my", "sister"), "She is my sister"),
-      (("It", "is", "a", "beautiful", "day"), "It is a beautiful day"),
-      (("You", "are", "my", "friend"), "You are my friend"),
-      (("The", "cat", "is", "on", "the", "roof"), "The cat is on the roof"),
-      (("It", "is", "raining"), "It is raining"),
-      (("We", "are", "going", "to", "the", "park"), "We are going to the park"),
-      (("She", "has", "a", "car"), "She has a car"),
-      (("They", "are", "friends"), "They are friends"),
-      (("I", "love", "music"), "I love music"),
-      (("The", "dog", "is", "barking"), "The dog is barking"),
-      (("He", "is", "reading", "a", "book"), "He is reading a book"),
-      (("You", "have", "a", "nice", "house"), "You have a nice house"),
-      (("We", "are", "happy"), "We are happy"),
-      (("The", "children", "are", "playing"), "The children are playing"),
-      (("She", "is", "my", "sister"), "She is my sister"),
-      (("It", "is", "a", "beautiful", "day"), "It is a beautiful day"),
-    ]
+    questions = self.questions_set
+    if not questions:
+      self.current_question = None
+      self.current_answer = None
+      return ""
     # Evita repetir la última pregunta
     same_question = True
     while same_question:

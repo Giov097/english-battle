@@ -122,7 +122,7 @@ def handle_combat_trigger() -> None:
   if combat_instance is None or not combat_instance.active:
     for zombie in zombies:
       if not zombie.dead and character.can_attack(zombie):
-        combat_instance = Combat(character, zombie)
+        combat_instance = Combat(character, zombie, level.questions_set)
         question = combat_instance.generate_question()
         combat_result_text = ""
         combat_input_text = ""
