@@ -4,6 +4,7 @@ import random
 from enum import Enum
 
 import pygame
+from pygame.font import FontType
 from pygame.locals import MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION
 from pygame.mixer import Channel
 
@@ -276,7 +277,7 @@ class Combat:
 class WordOrderingModal:
   """Modal for word ordering questions with drag-and-drop."""
 
-  def __init__(self, question_words, font, rect) -> None:
+  def __init__(self, question_words, font: FontType, rect: Rect) -> None:
     self.font = font
     self.rect = rect
     self.shuffled_words = list(question_words)
@@ -284,16 +285,31 @@ class WordOrderingModal:
     self.answer_words = []
     self.dragging = None
     self.word_rects = {"shuffled": [], "answer": []}
+    self.confirmed = False
+    self.result_text = ""
+    self._init_buttons()
     self._update_word_rects()
 
-  def _update_word_rects(self) -> None:
-    """Updates the rectangles for word positions."""
+  def _init_buttons(self) -> None:
+    """Initializes the button rectangles."""
+    # Define los rects de los botones
+    btn_w, btn_h = 100, 36  # Botones más compactos
     margin = 10
-    word_w, word_h = 120, 40
+    y_btn = self.rect.y + self.rect.height - btn_h - margin
+    self.confirm_btn_rect = pygame.Rect(
+        self.rect.x + margin, y_btn, btn_w, btn_h)
+    self.reset_btn_rect = pygame.Rect(
+        self.rect.x + self.rect.width - btn_w - margin, y_btn, btn_w, btn_h)
+
+  def _update_word_rects(self) -> None:
+    """Updates the rectangles for the words in both areas."""
+    margin = 10
+    word_w, word_h = 90, 32  # Palabras más chicas
+    title_height = 35
     self.word_rects["shuffled"] = []
     for i, word in enumerate(self.shuffled_words):
       x = self.rect.x + margin + i * (word_w + margin)
-      y = self.rect.y + margin
+      y = self.rect.y + margin + title_height
       self.word_rects["shuffled"].append(pygame.Rect(x, y, word_w, word_h))
     self.word_rects["answer"] = []
     for i, word in enumerate(self.answer_words):
@@ -302,7 +318,7 @@ class WordOrderingModal:
       self.word_rects["answer"].append(pygame.Rect(x, y, word_w, word_h))
 
   def draw(self, surface: Surface) -> None:
-    """Draws the modal with words and current state."""
+    """Draws the modal with words and buttons."""
     pygame.draw.rect(surface, Color.MODAL_BG, self.rect)
     title = self.font.render("Ordena las palabras:", True, Color.TITLE_TEXT)
     surface.blit(title, (self.rect.x + 10, self.rect.y + 5))
@@ -311,24 +327,58 @@ class WordOrderingModal:
       pygame.draw.rect(surface, Color.WORD_BG, rect)
       pygame.draw.rect(surface, Color.WORD_BORDER, rect, 2)
       txt = self.font.render(word, True, Color.TITLE_TEXT)
-      surface.blit(txt, (rect.x + 10, rect.y + 5))
+      surface.blit(txt, (rect.x + 6, rect.y + 4))
     for i, word in enumerate(self.answer_words):
       rect = self.word_rects["answer"][i]
       pygame.draw.rect(surface, Color.ANSWER_WORD_BG, rect)
       pygame.draw.rect(surface, Color.WORD_BORDER, rect, 2)
       txt = self.font.render(word, True, Color.TITLE_TEXT)
-      surface.blit(txt, (rect.x + 10, rect.y + 5))
+      surface.blit(txt, (rect.x + 6, rect.y + 4))
     if self.dragging:
       word, _, _ = self.dragging
       mx, my = pygame.mouse.get_pos()
-      drag_rect = pygame.Rect(mx - 60, my - 20, 120, 40)
-      txt = self.font.render(word, True, (0, 0, 0))
-      surface.blit(txt, (drag_rect.x + 10, drag_rect.y + 5))
+      drag_rect = pygame.Rect(mx - 45, my - 16, 90, 32)
+      pygame.draw.rect(surface, Color.DRAG_WORD_BG, drag_rect)
+      txt = self.font.render(word, True, Color.TITLE_TEXT)
+      surface.blit(txt, (drag_rect.x + 6, drag_rect.y + 4))
+    self._draw_buttons(surface)
+    if self.result_text:
+      result_color = Color.CORRECT_ANSWER_BG if "Correcto" in self.result_text else Color.WRONG_ANSWER_BG
+      result_surface = self.font.render(self.result_text, True, result_color)
+      # Calcula posición debajo de los botones
+      result_x = self.rect.x + 10
+      result_y = self.confirm_btn_rect.bottom + 10
+      surface.blit(result_surface, (result_x, result_y))
+
+  def _draw_buttons(self, surface: Surface) -> None:
+    """Draws the Confirm and Reset buttons."""
+    pygame.draw.rect(surface, Color.WORD_BG, self.confirm_btn_rect)
+    pygame.draw.rect(surface, Color.WORD_BORDER, self.confirm_btn_rect, 2)
+    txt2 = self.font.render("Confirmar", True, Color.TITLE_TEXT)
+    txt2_rect = txt2.get_rect(center=self.confirm_btn_rect.center)
+    surface.blit(txt2, txt2_rect)
+
+    pygame.draw.rect(surface, Color.WORD_BG, self.reset_btn_rect)
+    pygame.draw.rect(surface, Color.WORD_BORDER, self.reset_btn_rect, 2)
+    txt = self.font.render("Reiniciar", True, Color.TITLE_TEXT)
+    txt_rect = txt.get_rect(center=self.reset_btn_rect.center)
+    surface.blit(txt, txt_rect)
 
   def handle_event(self, event) -> None:
-    """Handles mouse events for drag-and-drop."""
     if event.type == MOUSEBUTTONDOWN:
       mx, my = event.pos
+      # Botón Confirmar
+      if self.confirm_btn_rect.collidepoint(mx, my):
+        self.confirmed = True
+        return
+      # Botón Reiniciar
+      if self.reset_btn_rect.collidepoint(mx, my):
+        self.shuffled_words += self.answer_words
+        self.answer_words = []
+        self.confirmed = False
+        self._update_word_rects()
+        return
+      # Palabras
       for i, rect in enumerate(self.word_rects["shuffled"]):
         if rect.collidepoint(mx, my):
           self.dragging = (self.shuffled_words[i], "shuffled", i)
@@ -340,7 +390,6 @@ class WordOrderingModal:
     elif event.type == MOUSEBUTTONUP and self.dragging:
       mx, my = event.pos
       word, from_area, idx = self.dragging
-      # Si soltó en área de respuesta
       answer_area = pygame.Rect(self.rect.x,
                                 self.rect.y + self.rect.height // 2,
                                 self.rect.width, self.rect.height // 2)
@@ -355,8 +404,13 @@ class WordOrderingModal:
       self.dragging = None
       self._update_word_rects()
     elif event.type == MOUSEMOTION and self.dragging:
-      # Pass
       pass
 
   def get_player_answer(self) -> str:
     return " ".join(self.answer_words)
+
+  def reset(self):
+    self.shuffled_words += self.answer_words
+    self.answer_words = []
+    self.confirmed = False
+    self._update_word_rects()
