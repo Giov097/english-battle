@@ -18,7 +18,7 @@ window: Surface = pygame.display.set_mode(DEFAULT_WINDOW_SIZE)
 pygame.display.set_caption("English Battle")
 character: Character = Hero(50, 50, health=20)
 
-level_difficulty = 2
+level_difficulty = 1
 NUM_ZOMBIES: int = 5
 level: Level = Level(DEFAULT_WINDOW_SIZE, difficulty=level_difficulty,
                      level_type=LevelType.MULTIPLE_CHOICE)
