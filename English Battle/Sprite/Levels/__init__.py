@@ -7,12 +7,17 @@ SPRITE_DIR = os.path.dirname(__file__)
 
 DOOR_1_SPRITES = {
   "closed": pygame.image.load(
-    os.path.join(SPRITE_DIR, "Door", "door1-closed.png")),
+      os.path.join(SPRITE_DIR, "Door", "door1-closed.png")),
   "open": pygame.image.load(os.path.join(SPRITE_DIR, "Door", "door-open.png")),
   "opening-1": pygame.image.load(
-    os.path.join(SPRITE_DIR, "Door", "door1-opening-1.png")),
+      os.path.join(SPRITE_DIR, "Door", "door1-opening-1.png")),
   "opening-2": pygame.image.load(
-    os.path.join(SPRITE_DIR, "Door", "door1-opening-2.png")),
+      os.path.join(SPRITE_DIR, "Door", "door1-opening-2.png")),
   "opening-3": pygame.image.load(
-    os.path.join(SPRITE_DIR, "Door", "door1-opening-3.png"))
+      os.path.join(SPRITE_DIR, "Door", "door1-opening-3.png"))
+}
+
+MEDKIT_SPRITES = {
+  "base": pygame.image.load(
+      os.path.join(SPRITE_DIR, "Medkit", "medkit.png")),
 }

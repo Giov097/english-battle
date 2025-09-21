@@ -313,7 +313,7 @@ def setup_level(level_idx: int) -> None:
   """Initializes the level and characters according to selected config."""
   global character, level, zombies
   config = LEVELS_CONFIG[level_idx]
-  character = Hero(50, 50, health=1)
+  character = Hero(50, 50, health=50)
   level = Level(window_size=DEFAULT_WINDOW_SIZE,
                 difficulty=config["difficulty"],
                 level_type=get_level_type(config["type"]),
@@ -421,6 +421,7 @@ def main_loop() -> None:
     move_zombies()
     update_all_sprites()
     level.check_open_door(zombies)
+    level.check_medkit_pickup(character)
     check_advance_level()
     draw_game()
     clock.tick(60)

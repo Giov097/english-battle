@@ -10,7 +10,7 @@ from pygame.locals import MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION
 from pygame.mixer import Channel
 
 from Sprite.Backgrounds import BACKGROUNDS
-from Sprite.Levels import DOOR_1_SPRITES
+from Sprite.Levels import DOOR_1_SPRITES, MEDKIT_SPRITES
 from Sound import SOUNDS
 from lib.Var import (
   DEFAULT_WINDOW_SIZE,
@@ -55,6 +55,7 @@ class Level:
     self.combat_instance = None
     self.combat_modal = None
     self.door = self._spawn_door()
+    self.medkits = self._spawn_medkits()
 
   def _spawn_door(self) -> 'Door':
     """Spawns a door in a valid position (not colliding with maze walls)."""
@@ -68,6 +69,23 @@ class Level:
         return Door((x, y), DOOR_1_SPRITES)
     # Si no encuentra lugar, la pone en (0,0)
     return Door((0, 0), DOOR_1_SPRITES)
+
+  def _spawn_medkits(self) -> list['Medkit']:
+    """Spawns medkits randomly, less likely as difficulty increases."""
+    medkits = []
+    sprite_w, sprite_h = 24, 24
+    # Probabilidad inversa a la dificultad (más difícil, menos medkits)
+    max_medkits = max(0, 2 - self.difficulty)
+    for _ in range(max_medkits):
+      if random.random() < (1.0 - self.difficulty * 0.15):
+        for _ in range(50):
+          x = random.randint(0, self.window_size[0] - sprite_w)
+          y = random.randint(0, self.window_size[1] - sprite_h)
+          rect = pygame.Rect(x, y, sprite_w, sprite_h)
+          if not self.check_collision(rect):
+            medkits.append(Medkit((x, y), MEDKIT_SPRITES))
+            break
+    return medkits
 
   def get_door(self) -> 'Door':
     """Returns the door object."""
@@ -174,6 +192,9 @@ class Level:
       if self.door.state == "opening":
         self.door.animate_opening()
       self.door.draw(surface)
+    for medkit in self.medkits:
+      if not medkit.used:
+        medkit.draw(surface)
 
   def check_collision(self, rect: Rect) -> bool:
     """Returns True if rect collides with any maze wall."""
@@ -287,6 +308,16 @@ class Level:
     if self.door and self.door.state == "closed":
       if all(not z.is_alive() for z in zombies):
         self.door.open()
+
+  def check_medkit_pickup(self, hero: 'Hero') -> None:
+    """Checks if hero picks up a medkit and heals."""
+    for medkit in self.medkits:
+      if not medkit.used and hero.health < hero.max_health:
+        hero_rect = pygame.Rect(hero.x, hero.y, 23, 30)
+        medkit_rect = pygame.Rect(medkit.position[0], medkit.position[1], 24,
+                                  24)
+        if hero_rect.colliderect(medkit_rect):
+          medkit.apply(hero)
 
 
 class Combat:
@@ -850,3 +881,36 @@ class Door:
     Draws the door on the given surface.
     """
     surface.blit(self.image, self.position)
+
+
+class Medkit:
+  """Class representing a medkit in the level."""
+
+  def __init__(self, position: tuple[int, int],
+      sprite_dict: dict[str, 'Surface']) -> None:
+    """
+    Initializes the Medkit object.
+    """
+    self.position = position
+    self.sprites = sprite_dict
+    self.image = self.sprites["base"]
+    self.used = False
+    self.sounds = [SOUNDS.get("smallmedkit1"), SOUNDS.get("smallmedkit2")]
+
+  def draw(self, surface: 'Surface') -> None:
+    """
+    Draws the medkit on the given surface.
+    """
+    if not self.used:
+      surface.blit(self.image, self.position)
+
+  def apply(self, hero: 'Hero') -> None:
+    """
+    Heals the hero and plays a sound.
+    """
+    if not self.used and hero.health < hero.max_health:
+      hero.health = min(hero.max_health, hero.health + 25)
+      self.used = True
+      sound = random.choice(self.sounds)
+      if sound:
+        sound.play()
