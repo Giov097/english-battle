@@ -16,7 +16,6 @@ from lib.Var import (
   DEFAULT_WINDOW_SIZE,
   DEFAULT_WALL_THICKNESS,
   DEFAULT_CELL_SIZE,
-  DEFAULT_DEATH_FADE_DURATION,
   QUESTIONS,
 )
 from lib.Color import Color
@@ -52,10 +51,10 @@ class Level:
     self.questions_set = QUESTIONS.get(self.difficulty, {}).get(
         self.level_type.value,
         [])
-    self.combat_instance = None
-    self.combat_modal = None
     self.door = self._spawn_door()
     self.medkits = self._spawn_medkits()
+    self.combat_instance = None
+    self.combat_modal = None
 
   def _spawn_door(self) -> 'Door':
     """Spawns a door in a valid position (not colliding with maze walls)."""
@@ -186,8 +185,7 @@ class Level:
   def draw_maze(self, surface: Surface) -> None:
     """Draws the maze walls and the door on the given surface."""
     for wall in self.maze_walls:
-      pygame.draw.rect(surface, (80, 80, 80), wall)
-    # Dibuja la puerta
+      pygame.draw.rect(surface, Color.DEFAULT_WALL_COLOR, wall)
     if self.door:
       if self.door.state == "opening":
         self.door.animate_opening()
@@ -203,7 +201,8 @@ class Level:
         return True
     return False
 
-  def play_death_sounds(self) -> None:
+  @staticmethod
+  def play_death_sounds() -> None:
     """
     Plays beep sound twice and then flatline, each after the previous finishes.
     """
@@ -222,6 +221,8 @@ class Level:
     from lib.Core import Zombie
     zombies: list[Zombie] = []
     sprite_w, sprite_h = (23, 30)
+    x: int = 0
+    y: int = 0
     for _ in range(num_zombies):
       valid_spawn = False
       while not valid_spawn:
