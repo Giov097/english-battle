@@ -32,10 +32,11 @@ class LevelType(Enum):
 class Level:
   """Class to manage the game level, including background and maze."""
 
-  def __init__(self, window_size: tuple[int, int] = DEFAULT_WINDOW_SIZE,
-      background_name: str = "grass",
-      difficulty: int = 1,
-      level_type: LevelType = LevelType.WORD_ORDERING) -> None:
+  def __init__(self,
+      background_name: str,
+      difficulty: int,
+      level_type: LevelType,
+      window_size: tuple[int, int] = DEFAULT_WINDOW_SIZE) -> None:
     """
     Initializes the Level with maze, background, and questions.
     """
@@ -56,8 +57,6 @@ class Level:
         [])
     self.combat_instance = None
     self.combat_modal = None
-
-    # Spawn door in a valid position
     self.door = self._spawn_door()
 
   def _spawn_door(self) -> 'Door':
@@ -72,6 +71,10 @@ class Level:
         return Door((x, y), DOOR_1_SPRITES)
     # Si no encuentra lugar, la pone en (0,0)
     return Door((0, 0), DOOR_1_SPRITES)
+
+  def get_door(self) -> 'Door':
+    """Returns the door object."""
+    return self.door
 
   @staticmethod
   def _init_maze_structures(cols: int, rows: int) -> tuple[

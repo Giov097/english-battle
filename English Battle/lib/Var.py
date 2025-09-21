@@ -160,90 +160,105 @@ LEVELS_CONFIG = [
     "name": "Nivel 1.1 - Multiple Choice",
     "difficulty": 1,
     "type": "multiple_choice",
-    "num_zombies": 3
+    "num_zombies": 3,
+    "background": "grass"
   },
   {
     "name": "Nivel 1.2 - Word Ordering",
     "difficulty": 1,
     "type": "word_ordering",
-    "num_zombies": 3
+    "num_zombies": 3,
+    "background": "grass"
   },
   {
     "name": "Nivel 1.3 - Fill in the Blank",
     "difficulty": 1,
     "type": "fill_in_the_blank",
-    "num_zombies": 3
+    "num_zombies": 3,
+    "background": "grass"
   },
   {
     "name": "Nivel 2.1 - Multiple Choice",
     "difficulty": 2,
     "type": "multiple_choice",
-    "num_zombies": 4
+    "num_zombies": 4,
+    "background": "cave"
   },
   {
     "name": "Nivel 2.2 - Word Ordering",
     "difficulty": 2,
     "type": "word_ordering",
-    "num_zombies": 4
+    "num_zombies": 4,
+    "background": "cave"
   },
   {
     "name": "Nivel 2.3 - Fill in the Blank",
     "difficulty": 2,
     "type": "fill_in_the_blank",
-    "num_zombies": 4
+    "num_zombies": 4,
+    "background": "cave"
   },
   {
     "name": "Nivel 3.1 - Multiple Choice",
     "difficulty": 3,
     "type": "multiple_choice",
-    "num_zombies": 5
+    "num_zombies": 5,
+    "background": "beach"
   },
   {
     "name": "Nivel 3.2 - Word Ordering",
     "difficulty": 3,
     "type": "word_ordering",
-    "num_zombies": 5
+    "num_zombies": 5,
+    "background": "beach"
   },
   {
     "name": "Nivel 3.3 - Fill in the Blank",
     "difficulty": 3,
     "type": "fill_in_the_blank",
-    "num_zombies": 5
+    "num_zombies": 5,
+    "background": "beach"
   },
   {
     "name": "Nivel 4.1 - Multiple Choice",
     "difficulty": 4,
     "type": "multiple_choice",
-    "num_zombies": 10
+    "num_zombies": 7,
+    "background": "brick-dust"
   },
   {
     "name": "Nivel 4.2 - Word Ordering",
     "difficulty": 4,
     "type": "word_ordering",
-    "num_zombies": 10
+    "num_zombies": 7,
+    "background": "brick-dust"
   },
   {
     "name": "Nivel 4.3 - Fill in the Blank",
     "difficulty": 4,
     "type": "fill_in_the_blank",
-    "num_zombies": 10
+    "num_zombies": 7,
+    "background": "brick-dust"
   },
   {
     "name": "Nivel 5.1 - Multiple Choice",
     "difficulty": 5,
     "type": "multiple_choice",
-    "num_zombies": 12
+    "num_zombies": 8,
+    "background": "moon"
   },
   {
     "name": "Nivel 5.2 - Word Ordering",
     "difficulty": 5,
     "type": "word_ordering",
-    "num_zombies": 12
+    "num_zombies": 8,
+    "background": "moon"
   },
   {
     "name": "Nivel 5.3 - Fill in the Blank",
     "difficulty": 5,
     "type": "fill_in_the_blank",
-    "num_zombies": 12
+    "num_zombies": 8,
+    "background": "moon"
   }
 ]

@@ -1,19 +1,19 @@
 """Main module for the English Battle game."""
+import random
+import sys
 from typing import Optional
 
 import pygame
-import random
-import sys
 from pygame import Surface
 from pygame.font import FontType
 from pygame.mixer import Channel
 from pygame.time import Clock
 
 from Sound import SOUNDS
-from lib.Color import Color
-from lib.Core import Hero, Zombie, Character
-from lib.Level import Level, Combat, LevelType
 from Sprite.Backgrounds import BACKGROUNDS
+from lib.Color import Color
+from lib.Core import Hero, Zombie
+from lib.Level import Level, Combat, LevelType, Door
 from lib.Var import FONT, LEVELS_CONFIG
 
 pygame.init()
@@ -23,10 +23,8 @@ window: Surface = pygame.display.set_mode(DEFAULT_WINDOW_SIZE)
 pygame.display.set_caption("English Battle")
 zombies: list[Zombie] = []
 
-NUM_ZOMBIES: int = 5
-level: Level = Level(DEFAULT_WINDOW_SIZE, difficulty=1,
-                     level_type=LevelType.MULTIPLE_CHOICE)
-zombies: list[Zombie] = level.generate_zombies(NUM_ZOMBIES)
+level: Level
+character: Hero
 
 repeat: bool = True
 # Para limitar los FPS
@@ -95,7 +93,6 @@ def move_character() -> None:
     dy = 1
     moving = True
 
-  # Solo permite movimiento si no hay combate activo
   combat_instance = level.get_combat_instance()
   if combat_instance is None or not combat_instance.active:
     character.move(dx, dy, moving, DEFAULT_WINDOW_SIZE[0],
@@ -190,7 +187,6 @@ def move_zombies() -> None:
 
 def draw_game() -> None:
   """Draws all game elements on the window."""
-  window.fill((255, 255, 255))
   level.draw_background(window)
   level.draw_maze(window)
   for zombie in zombies:
@@ -256,7 +252,6 @@ def draw_level_select(win: Surface, menu_font: FontType,
   title = menu_font.render("Selecciona nivel", True, (255, 255, 255))
   win.blit(title, (DEFAULT_WINDOW_SIZE[0] // 2 - title.get_width() // 2, 60))
 
-  # Reduce font size for levels
   level_font = pygame.font.SysFont(FONT, 20)
   max_visible = 7
   half = max_visible // 2
@@ -276,7 +271,7 @@ def draw_level_select(win: Surface, menu_font: FontType,
   pygame.display.flip()
 
 
-def get_level_type(type_str: str):
+def get_level_type(type_str: str) -> LevelType:
   """Returns the LevelType enum from string."""
   if type_str == "multiple_choice":
     return LevelType.MULTIPLE_CHOICE
@@ -319,9 +314,10 @@ def setup_level(level_idx: int) -> None:
   global character, level, zombies
   config = LEVELS_CONFIG[level_idx]
   character = Hero(50, 50, health=200)
-  level_type = get_level_type(config["type"])
-  level = Level(DEFAULT_WINDOW_SIZE, difficulty=config["difficulty"],
-                level_type=level_type)
+  level = Level(window_size=DEFAULT_WINDOW_SIZE,
+                difficulty=config["difficulty"],
+                level_type=get_level_type(config["type"]),
+                background_name=config["background"])
   zombies = level.generate_zombies(config["num_zombies"])
 
 
@@ -367,6 +363,48 @@ def close_game() -> None:
   sys.exit()
 
 
+def check_advance_level() -> None:
+  """Checks if the hero crosses the open door and advances to the next level."""
+  global level, character, zombies
+  door: Door = level.get_door()
+  if door and door.state == "open":
+    hero_rect = pygame.Rect(character.x, character.y, 23, 30)
+    door_rect = pygame.Rect(door.position[0], door.position[1], 10, 14)
+    if hero_rect.colliderect(door_rect):
+      sound = SOUNDS.get("latchunlocked2")
+      transition_black_screen()
+      if sound:
+        sound.play()
+      next_level_idx = get_next_level_index()
+      if next_level_idx is not None:
+        setup_level(next_level_idx)
+      else:
+        # TODO: Pantalla de victoria
+        main_menu()
+
+
+def get_next_level_index() -> int | None:
+  """Returns the index of the next level, or None if finished."""
+  # No es confiable, mejor buscar por config
+  current_name = level.background_name
+  current_idx = None
+  for idx, lvl in enumerate(LEVELS_CONFIG):
+    if lvl["difficulty"] == level.difficulty and lvl[
+      "type"] == level.level_type.value:
+      current_idx = idx
+      break
+  if current_idx is not None and current_idx + 1 < len(LEVELS_CONFIG):
+    return current_idx + 1
+  return None
+
+
+def transition_black_screen(duration: float = 1.0) -> None:
+  """Shows a black screen for the given duration (seconds)."""
+  window.fill((0, 0, 0))
+  pygame.display.flip()
+  pygame.time.delay(int(duration * 1000))
+
+
 def main_loop() -> None:
   """Main game loop."""
   global repeat
@@ -383,6 +421,7 @@ def main_loop() -> None:
     move_zombies()
     update_all_sprites()
     level.check_open_door(zombies)
+    check_advance_level()
     draw_game()
     clock.tick(60)
   close_game()
