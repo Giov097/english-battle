@@ -50,9 +50,8 @@ def handle_events() -> None:
     if event.type == pygame.QUIT:
       repeat = False
     level.handle_combat_event(event, font)
-    combat_instance = level.get_combat_instance()
-    if combat_instance is not None and combat_instance.active and (
-        combat_instance.current_type != "word_ordering"):
+    combat = level.get_combat_instance()
+    if combat is not None and combat.active:
       handle_combat_input(event)
 
 
@@ -205,27 +204,9 @@ def draw_game() -> None:
   # Interfaz gráfica para combate
   combat_instance = level.get_combat_instance()
   combat_modal = level.get_combat_modal()
-  if combat_instance is not None and combat_instance.active:
-    overlay = pygame.Surface(DEFAULT_WINDOW_SIZE)
-    overlay.set_alpha(180)
-    overlay.fill((0, 0, 0))
-    window.blit(overlay, (0, 0))
-    if combat_instance.current_type == LevelType.WORD_ORDERING.value and combat_modal:
-      combat_modal.draw(window)
-    elif combat_instance.current_type == LevelType.MULTIPLE_CHOICE.value and combat_modal:
-      combat_modal.draw(window)
-    else:
-      question_text = f"Ordena la oración correctamente: {combat_instance.current_question}"
-      question_surface = font.render(question_text, True,
-                                     Color.QUESTION_SURFACE_BG)
-      window.blit(question_surface, (40, 100))
-      input_surface = font.render("Tu respuesta: " + combat_input_text, True,
-                                  Color.ANSWER_SURFACE_BG)
-      window.blit(input_surface, (40, 150))
-      if combat_result_text:
-        result_surface = font.render(combat_result_text, True,
-                                     Color.CORRECT_ANSWER_BG if "Correcto" in combat_result_text else Color.WRONG_ANSWER_BG)
-        window.blit(result_surface, (40, 200))
+  if combat_instance is not None and combat_instance.active and combat_modal:
+    # El modal ya dibuja su propio fondo semitransparente y prompt
+    combat_modal.draw(window)
   pygame.display.flip()
 
 
@@ -337,7 +318,7 @@ def setup_level(level_idx: int) -> None:
   """Initializes the level and characters according to selected config."""
   global character, level, zombies
   config = LEVELS_CONFIG[level_idx]
-  character = Hero(50, 50, health=20)
+  character = Hero(50, 50, health=200)
   level_type = get_level_type(config["type"])
   level = Level(DEFAULT_WINDOW_SIZE, difficulty=config["difficulty"],
                 level_type=level_type)

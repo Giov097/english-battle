@@ -290,32 +290,32 @@ class Level:
       self.combat_modal.handle_event(event)
       if self.combat_modal.confirmed:
         player_answer = self.combat_modal.get_player_answer()
-        if player_answer.strip():
-          result = self.combat_instance.process_turn(player_answer)
+        if player_answer:
+          result = self.combat_instance.process_turn(player_answer.strip())
           self.combat_modal.result_text = result
           if self.combat_instance.active:
             if self.combat_instance.current_type == "word_ordering":
               words = self.combat_instance.current_question.split(" / ")
               self.combat_modal = WordOrderingModal(words, font,
                                                     pygame.Rect(40, 100, 560,
-                                                                260))
+                                                                260),
+                                                    result_text=result)
             elif self.combat_instance.current_type == "multiple_choice":
               q, options, _ = self.combat_instance.current_question
               self.combat_modal = MultipleChoiceModal(q, options, font,
                                                       pygame.Rect(40, 100, 560,
-                                                                  260))
+                                                                  260),
+                                                      result_text=result)
             elif self.combat_instance.current_type == "fill_in_the_blank":
               self.combat_modal = FillGapsModal(
                   self.combat_instance.current_question, font,
-                  pygame.Rect(40, 100, 560, 260))
+                  pygame.Rect(40, 100, 560, 260), result_text=result)
             else:
               self.combat_modal = None
-            self.combat_modal.result_text = ""
           else:
             self.combat_modal = None
         else:
           self.combat_modal.confirmed = False
-    return
 
   def get_combat_modal(self) -> 'BaseCombatModal':
     """Returns the current modal if it exists."""
@@ -421,14 +421,14 @@ class Combat:
 class BaseCombatModal(ABC):
   """Abstract base class for combat modals."""
 
-  def __init__(self, font: FontType, rect: Rect) -> None:
+  def __init__(self, font: FontType, rect: Rect, result_text: str = "") -> None:
     """
     Initializes the modal with font and rectangle.
     """
     self.font = font
     self.rect = rect
     self.confirmed = False
-    self.result_text = ""
+    self.result_text = result_text
     self._init_buttons()
 
   def _init_buttons(self) -> None:
@@ -491,11 +491,12 @@ class BaseCombatModal(ABC):
 class WordOrderingModal(BaseCombatModal):
   """Modal for word ordering questions with drag-and-drop."""
 
-  def __init__(self, question_words, font: FontType, rect: Rect) -> None:
+  def __init__(self, question_words, font: FontType, rect: Rect,
+      result_text: str = "") -> None:
     """
     Initializes the word ordering modal.
     """
-    super().__init__(font, rect)
+    super().__init__(font, rect, result_text)
     self.original_words = list(question_words)
     self.shuffled_words = list(self.original_words)
     random.shuffle(self.shuffled_words)
@@ -637,11 +638,11 @@ class MultipleChoiceModal(BaseCombatModal):
   """Modal for multiple choice questions."""
 
   def __init__(self, question: str, options: list[str], font: FontType,
-      rect: Rect) -> None:
+      rect: Rect, result_text: str = "") -> None:
     """
     Initializes the multiple choice modal.
     """
-    super().__init__(font, rect)
+    super().__init__(font, rect, result_text)
     self.question = question
     self.options = options
     self.selected_index = None
@@ -728,11 +729,12 @@ class MultipleChoiceModal(BaseCombatModal):
 class FillGapsModal(BaseCombatModal):
   """Modal for fill-in-the-blank questions with free text input."""
 
-  def __init__(self, question: str, font: FontType, rect: Rect) -> None:
+  def __init__(self, question: str, font: FontType, rect: Rect,
+      result_text: str = "") -> None:
     """
     Initializes the fill-in-the-blank modal.
     """
-    super().__init__(font, rect)
+    super().__init__(font, rect, result_text)
     self.question = question
     self.input_text = ""
     self.active_input = True
@@ -747,32 +749,49 @@ class FillGapsModal(BaseCombatModal):
 
   def draw(self, surface: Surface) -> None:
     """
-    Draws the modal with question, input box, and buttons.
+    Draws the modal with a prompt, input box, and buttons.
     """
-    pygame.draw.rect(surface, Color.MODAL_BG, self.rect)
+    # Fondo semitransparente para modal
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 120))
+    surface.blit(overlay, (0, 0))
+
+    # Área principal del modal
+    pygame.draw.rect(surface, Color.MODAL_BG, self.rect, border_radius=12)
+    pygame.draw.rect(surface, Color.WORD_BORDER, self.rect, 2, border_radius=12)
+
+    # Prompt
     title = self.font.render("Completa el espacio en blanco:", True,
                              Color.TITLE_TEXT)
-    surface.blit(title, (self.rect.x + 10, self.rect.y + 5))
+    surface.blit(title, (self.rect.x + 20, self.rect.y + 18))
+
+    # Pregunta
     question_txt = self.font.render(self.question, True, Color.TITLE_TEXT)
-    surface.blit(question_txt, (self.rect.x + 10, self.rect.y + 40))
+    surface.blit(question_txt, (self.rect.x + 20, self.rect.y + 60))
 
     # Input box
-    pygame.draw.rect(surface, Color.ANSWER_AREA_BG, self.input_rect)
-    pygame.draw.rect(surface, Color.ANSWER_AREA_BORDER, self.input_rect, 2)
+    pygame.draw.rect(surface, Color.ANSWER_AREA_BG, self.input_rect,
+                     border_radius=8)
+    pygame.draw.rect(surface, Color.ANSWER_AREA_BORDER, self.input_rect, 2,
+                     border_radius=8)
     input_display = self.input_text
     if self.active_input and self.cursor_visible:
       input_display += "|"
     input_txt = self.font.render(input_display, True, Color.TITLE_TEXT)
     surface.blit(input_txt, (self.input_rect.x + 8, self.input_rect.y + 6))
 
+    # Botones
     self._draw_buttons(surface)
+
+    # Resultado
     if self.result_text:
       result_color = Color.CORRECT_ANSWER_BG if "Correcto" in self.result_text else Color.WRONG_ANSWER_BG
       result_surface = self.font.render(self.result_text, True, result_color)
-      result_x = self.rect.x + 10
-      result_y = self.confirm_btn_rect.bottom + 10
+      result_x = self.rect.x + 20
+      result_y = self.confirm_btn_rect.bottom + 14
       surface.blit(result_surface, (result_x, result_y))
 
+    # Cursor blink
     self.cursor_counter += 1
     if self.cursor_counter > 30:
       self.cursor_visible = not self.cursor_visible
@@ -794,7 +813,7 @@ class FillGapsModal(BaseCombatModal):
       if self.reset_btn_rect.collidepoint(mx, my):
         self.input_text = ""
         self.confirmed = False
-        return
+        self.result_text = ""
     elif event.type == pygame.KEYDOWN and self.active_input:
       if event.key == pygame.K_BACKSPACE:
         self.input_text = self.input_text[:-1]
@@ -821,7 +840,7 @@ class FillGapsModal(BaseCombatModal):
     self.confirmed = False
     self.active_input = True
     self.cursor_visible = True
-    self.cursor_counter = 0
+    self.result_text = ""
 
 
 class Door:

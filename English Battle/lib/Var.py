@@ -35,10 +35,10 @@ QUESTIONS = {
        "have"),
     ],
     "fill_in_the_blank": [
-      ("I ___ a student.", "am"),
-      ("She ___ happy.", "is"),
-      ("They ___ playing.", "are"),
-      ("We ___ a dog.", "have"),
+      ("I ___ a student. (to be)", "am"),
+      ("She ___ happy. (to be)", "is"),
+      ("They ___ playing. (to be)", "are"),
+      ("We ___ a dog. (to have)", "have"),
     ]
   },
   # Intermedio bajo
@@ -64,10 +64,10 @@ QUESTIONS = {
         "The cat is in the roof"], "The cat is on the roof"),
     ],
     "fill_in_the_blank": [
-      ("He ___ pizza.", "likes"),
-      ("You ___ my friend.", "are"),
-      ("The cat is ___ the roof.", "on"),
-      ("My brother ___ tall.", "is"),
+      ("He ___ pizza. (like)", "likes"),
+      ("You ___ my friend. (to be)", "are"),
+      ("The cat ___ on the roof. (to be)", "is"),
+      ("My brother ___ tall. (to be)", "is"),
     ]
   },
   # Intermedio
@@ -92,10 +92,10 @@ QUESTIONS = {
        "They are friends"),
     ],
     "fill_in_the_blank": [
-      ("It ___ raining.", "is"),
-      ("We are going ___ the park.", "to"),
-      ("She ___ a car.", "has"),
-      ("They are ___", "friends"),
+      ("It ___ raining. (to be)", "is"),
+      ("We ___ going to the park. (to be)", "to"),
+      ("She ___ a car. (have)", "has"),
+      ("They ___ friends (to be)", "are"),
     ]
   },
   # Intermedio alto
@@ -120,10 +120,10 @@ QUESTIONS = {
        "You have a nice house"),
     ],
     "fill_in_the_blank": [
-      ("I ___ music.", "love"),
-      ("The dog is ___", "barking"),
-      ("He is reading ___ book.", "a"),
-      ("You ___ a nice house.", "have"),
+      ("I ___ music. (to love)", "love"),
+      ("The dog ___ barking. (to be)", "is"),
+      ("He is ___ a book. (to read)", "reading"),
+      ("You ___ a nice house. (to have)", "have"),
     ]
   },
   # Difícil
@@ -147,10 +147,10 @@ QUESTIONS = {
                              "It is beautiful day"], "It is a beautiful day"),
     ],
     "fill_in_the_blank": [
-      ("We ___ happy.", "are"),
-      ("The children ___ playing.", "are"),
-      ("She ___ my sister.", "is"),
-      ("It is a ___ day.", "beautiful"),
+      ("We ___ happy. (to be)", "are"),
+      ("The children ___ playing. (to be)", "are"),
+      ("She ___ my sister. (to be)", "is"),
+      ("It ___ a beautiful day. (to be)", "is"),
     ]
   }
 }
