@@ -313,7 +313,7 @@ def setup_level(level_idx: int) -> None:
   """Initializes the level and characters according to selected config."""
   global character, level, zombies
   config = LEVELS_CONFIG[level_idx]
-  character = Hero(50, 50, health=200)
+  character = Hero(50, 50, health=1)
   level = Level(window_size=DEFAULT_WINDOW_SIZE,
                 difficulty=config["difficulty"],
                 level_type=get_level_type(config["type"]),
@@ -386,7 +386,6 @@ def check_advance_level() -> None:
 def get_next_level_index() -> int | None:
   """Returns the index of the next level, or None if finished."""
   # No es confiable, mejor buscar por config
-  current_name = level.background_name
   current_idx = None
   for idx, lvl in enumerate(LEVELS_CONFIG):
     if lvl["difficulty"] == level.difficulty and lvl[
@@ -411,9 +410,10 @@ def main_loop() -> None:
   main_menu()
   while repeat:
     if not character.is_alive():
-      level.handle_player_death(window)
-      clock.tick(60)
-      continue
+      level.play_death_sounds()
+      transition_black_screen(3)
+      main_menu()
+      repeat = False
     handle_events()
     move_character()
     handle_combat_trigger()

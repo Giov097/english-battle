@@ -47,9 +47,6 @@ class Level:
         BACKGROUNDS[self.background_name], self.window_size
     )
     self.maze_walls: list[Rect] = self._generate_random_maze(self.window_size)
-    self._death_fade_active: bool = False
-    self._death_fade_start_time: int | None = None
-    self._death_fade_duration: float = DEFAULT_DEATH_FADE_DURATION
     self.difficulty: int = difficulty
     self.level_type: LevelType = level_type
     self.questions_set = QUESTIONS.get(self.difficulty, {}).get(
@@ -185,62 +182,19 @@ class Level:
         return True
     return False
 
-  def handle_player_death(self, window_surface: Surface) -> None:
-    """
-    Handles the death fade effect and sound sequence when the player dies.
-    """
-    if not self._death_fade_active:
-      self._death_fade_active = True
-      self._death_fade_start_time = pygame.time.get_ticks()
-      self._play_death_sounds()
-    elapsed = (pygame.time.get_ticks() - self._death_fade_start_time) / 1000.0
-    alpha = min(255, int((elapsed / self._death_fade_duration) * 255))
-    self._draw_death_fade(window_surface, alpha)
-    self.update_death_sounds()
-    if elapsed >= self._death_fade_duration:
-      pygame.quit()
-
-  def _draw_death_fade(self, surface: Surface, alpha: int) -> None:
-    """
-    Draws a black overlay with the given alpha for the death fade effect.
-    """
-    overlay = pygame.Surface(self.window_size)
-    overlay.fill((0, 0, 0))
-    overlay.set_alpha(alpha)
-    surface.blit(overlay, (0, 0))
-
-  def _play_death_sounds(self) -> None:
+  def play_death_sounds(self) -> None:
     """
     Plays beep sound twice and then flatline, each after the previous finishes.
     """
     channel: Channel = pygame.mixer.find_channel()
     if channel is None:
       return
-
+    channel.set_endevent(pygame.USEREVENT + 1)
     sounds = [SOUNDS["beep"], SOUNDS["beep"], SOUNDS["flatline"]]
-    self._death_sound_index: int = 0
-
-    def play_next_sound() -> None:
-      """Plays the next sound"""
-      if self._death_sound_index < len(sounds):
-        channel.play(sounds[self._death_sound_index])
-        self._death_sound_index += 1
-
-    def check_channel_end() -> None:
-      """Checks if the channel is not busy"""
-      if not channel.get_busy() and self._death_sound_index < len(sounds):
-        play_next_sound()
-
-    play_next_sound()
-
-    self._check_death_sound_end = check_channel_end
-
-  def update_death_sounds(self) -> None:
-    """
-    Call in the main loop to update the death sound sequence.
-    """
-    if hasattr(self, "_check_death_sound_end"):
-      self._check_death_sound_end()
+    for s in sounds:
+      channel.queue(s)
+    channel.set_volume(0.5)
+    channel.get_queue().play(fade_ms=7000)
 
   def generate_zombies(self, num_zombies: int) -> list['Zombie']:
     """Generates zombies at random positions not colliding with walls."""
