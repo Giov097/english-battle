@@ -256,23 +256,29 @@ class Level:
       zombies.append(Zombie(x, y, health=health))
     return zombies
 
-  def start_combat(self, character, zombies, font) -> bool:
+  def start_combat(self, character: 'Character', zombies: list['Zombie'],
+      font: FontType) -> bool:
     """Starts combat if the hero is near a zombie."""
     if self.combat_instance is None or not self.combat_instance.active:
       for zombie in zombies:
         if zombie.is_alive() and character.can_attack(zombie):
-          self.combat_instance = Combat(character, zombie, self.questions_set)
+          self.combat_instance = Combat(character, zombie,
+                                        self.level_type.value,
+                                        self.questions_set)
           question = self.combat_instance.generate_question()
-          if self.combat_instance.current_type == "word_ordering":
+          if self.level_type == LevelType.WORD_ORDERING:
             words = question.split(" / ")
             self.combat_modal = WordOrderingModal(words, font,
                                                   pygame.Rect(40, 100, 560,
                                                               260))
-          elif self.combat_instance.current_type == "multiple_choice":
+          elif self.level_type == LevelType.MULTIPLE_CHOICE:
             q, options, _ = self.combat_instance.current_question
             self.combat_modal = MultipleChoiceModal(q, options, font,
                                                     pygame.Rect(40, 100, 560,
                                                                 260))
+          elif self.level_type == LevelType.FILL_IN_THE_BLANK:
+            self.combat_modal = FillGapsModal(question, font,
+                                              pygame.Rect(40, 100, 560, 260))
           else:
             self.combat_modal = None
           return True
@@ -298,6 +304,10 @@ class Level:
               self.combat_modal = MultipleChoiceModal(q, options, font,
                                                       pygame.Rect(40, 100, 560,
                                                                   260))
+            elif self.combat_instance.current_type == "fill_in_the_blank":
+              self.combat_modal = FillGapsModal(
+                  self.combat_instance.current_question, font,
+                  pygame.Rect(40, 100, 560, 260))
             else:
               self.combat_modal = None
             self.combat_modal.result_text = ""
@@ -325,52 +335,59 @@ class Level:
 class Combat:
   """Class to manage combat encounters with grammar questions."""
 
-  def __init__(self, hero: 'Hero', enemy: 'Character',
+  def __init__(self, hero: 'Hero', enemy: 'Character', current_type: str,
       questions_set: list[dict[str, list[str]]]) -> None:
     """
     Initializes the Combat instance.
     """
     self.hero: 'Hero' = hero
     self.enemy: 'Character' = enemy
+    self.current_type: str = current_type
     self.active: bool = True
     self.current_question: str | None = None
     self.current_answer: str | None = None
-    self.current_type: str | None = None
     self._last_question: str | None = None
     self.questions_set = questions_set if questions_set is not None else []
 
-  def generate_question(self) -> str:
+  def generate_question(self) -> str | tuple[str, list[str], str] | None:
     """Generates a new grammar question (word ordering or multiple choice)."""
     questions = self.questions_set
     if not questions:
       self.current_question = None
       self.current_answer = None
       return ""
-    sample = questions[0]
-    if isinstance(sample, tuple) and len(sample) == 2:
+    if self.current_type == "word_ordering":
       same_question = True
       while same_question:
         words, answer = random.choice(questions)
         shuffled_words = list(words)
         random.shuffle(shuffled_words)
-        question_str = " / ".join(shuffled_words)
-        if question_str != self._last_question:
+        question = " / ".join(shuffled_words)
+        if question != self._last_question:
           same_question = False
-      self.current_question = question_str
+      self.current_question = question
       self.current_answer = answer
-      self.current_type = "word_ordering"
-      self._last_question = question_str
+      self._last_question = question
       return self.current_question
-    elif isinstance(sample, tuple) and len(sample) == 3:
+    elif self.current_type == "multiple_choice":
       same_question = True
       while same_question:
-        q, options, answer = random.choice(questions)
-        if q != self._last_question:
+        question, options, answer = random.choice(questions)
+        if question != self._last_question:
           same_question = False
-      self.current_question = (q, options, answer)
+      self.current_question = (question, options, answer)
       self.current_answer = answer
-      self.current_type = "multiple_choice"
-      self._last_question = q
+      self._last_question = question
+      return self.current_question
+    elif self.current_type == "fill_in_the_blank":
+      same_question = True
+      while same_question:
+        question, answer = random.choice(questions)
+        if question != self._last_question:
+          same_question = False
+      self.current_question = question
+      self.current_answer = answer
+      self._last_question = question
       return self.current_question
     else:
       self.current_question = None
@@ -706,6 +723,105 @@ class MultipleChoiceModal(BaseCombatModal):
     """
     self.selected_index = None
     self.confirmed = False
+
+
+class FillGapsModal(BaseCombatModal):
+  """Modal for fill-in-the-blank questions with free text input."""
+
+  def __init__(self, question: str, font: FontType, rect: Rect) -> None:
+    """
+    Initializes the fill-in-the-blank modal.
+    """
+    super().__init__(font, rect)
+    self.question = question
+    self.input_text = ""
+    self.active_input = True
+    self.input_rect = pygame.Rect(
+        self.rect.x + 20,
+        self.rect.y + self.rect.height // 2 - 18,
+        self.rect.width - 40,
+        36
+    )
+    self.cursor_visible = True
+    self.cursor_counter = 0
+
+  def draw(self, surface: Surface) -> None:
+    """
+    Draws the modal with question, input box, and buttons.
+    """
+    pygame.draw.rect(surface, Color.MODAL_BG, self.rect)
+    title = self.font.render("Completa el espacio en blanco:", True,
+                             Color.TITLE_TEXT)
+    surface.blit(title, (self.rect.x + 10, self.rect.y + 5))
+    question_txt = self.font.render(self.question, True, Color.TITLE_TEXT)
+    surface.blit(question_txt, (self.rect.x + 10, self.rect.y + 40))
+
+    # Input box
+    pygame.draw.rect(surface, Color.ANSWER_AREA_BG, self.input_rect)
+    pygame.draw.rect(surface, Color.ANSWER_AREA_BORDER, self.input_rect, 2)
+    input_display = self.input_text
+    if self.active_input and self.cursor_visible:
+      input_display += "|"
+    input_txt = self.font.render(input_display, True, Color.TITLE_TEXT)
+    surface.blit(input_txt, (self.input_rect.x + 8, self.input_rect.y + 6))
+
+    self._draw_buttons(surface)
+    if self.result_text:
+      result_color = Color.CORRECT_ANSWER_BG if "Correcto" in self.result_text else Color.WRONG_ANSWER_BG
+      result_surface = self.font.render(self.result_text, True, result_color)
+      result_x = self.rect.x + 10
+      result_y = self.confirm_btn_rect.bottom + 10
+      surface.blit(result_surface, (result_x, result_y))
+
+    self.cursor_counter += 1
+    if self.cursor_counter > 30:
+      self.cursor_visible = not self.cursor_visible
+      self.cursor_counter = 0
+
+  def handle_event(self, event) -> None:
+    """
+    Handles keyboard and mouse events for text input and buttons.
+    """
+    if event.type == MOUSEBUTTONDOWN:
+      mx, my = event.pos
+      if self.input_rect.collidepoint(mx, my):
+        self.active_input = True
+      else:
+        self.active_input = False
+      if self.confirm_btn_rect.collidepoint(mx, my):
+        self.confirmed = True
+        return
+      if self.reset_btn_rect.collidepoint(mx, my):
+        self.input_text = ""
+        self.confirmed = False
+        return
+    elif event.type == pygame.KEYDOWN and self.active_input:
+      if event.key == pygame.K_BACKSPACE:
+        self.input_text = self.input_text[:-1]
+      elif event.key == pygame.K_RETURN:
+        self.confirmed = True
+      elif event.key == pygame.K_TAB:
+        pass
+      else:
+        char = event.unicode
+        if len(char) == 1 and len(self.input_text) < 40:
+          self.input_text += char
+
+  def get_player_answer(self) -> str:
+    """
+    Returns the user's input as the answer.
+    """
+    return self.input_text.strip()
+
+  def reset(self) -> None:
+    """
+    Resets the modal to initial state.
+    """
+    self.input_text = ""
+    self.confirmed = False
+    self.active_input = True
+    self.cursor_visible = True
+    self.cursor_counter = 0
 
 
 class Door:

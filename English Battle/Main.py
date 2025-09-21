@@ -21,8 +21,6 @@ pygame.init()
 DEFAULT_WINDOW_SIZE: tuple[int, int] = (640, 480)
 window: Surface = pygame.display.set_mode(DEFAULT_WINDOW_SIZE)
 pygame.display.set_caption("English Battle")
-character: Character = None
-level: Level = None
 zombies: list[Zombie] = []
 
 NUM_ZOMBIES: int = 5

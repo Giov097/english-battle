@@ -33,6 +33,12 @@ QUESTIONS = {
        "am"),
       ("Complete: We ___ a car", ["have", "ha", "haves"],
        "have"),
+    ],
+    "fill_in_the_blank": [
+      ("I ___ a student.", "am"),
+      ("She ___ happy.", "is"),
+      ("They ___ playing.", "are"),
+      ("We ___ a dog.", "have"),
     ]
   },
   # Intermedio bajo
@@ -56,6 +62,12 @@ QUESTIONS = {
       ("Which is correct?",
        ["The cat is on the roof", "The cat are on the roof",
         "The cat is in the roof"], "The cat is on the roof"),
+    ],
+    "fill_in_the_blank": [
+      ("He ___ pizza.", "likes"),
+      ("You ___ my friend.", "are"),
+      ("The cat is ___ the roof.", "on"),
+      ("My brother ___ tall.", "is"),
     ]
   },
   # Intermedio
@@ -78,6 +90,12 @@ QUESTIONS = {
       ("Which is correct?",
        ["They are friends", "They is friends", "They are friend"],
        "They are friends"),
+    ],
+    "fill_in_the_blank": [
+      ("It ___ raining.", "is"),
+      ("We are going ___ the park.", "to"),
+      ("She ___ a car.", "has"),
+      ("They are ___", "friends"),
     ]
   },
   # Intermedio alto
@@ -100,6 +118,12 @@ QUESTIONS = {
       ("Which is correct?",
        ["You have a nice house", "You has a nice house", "You have nice house"],
        "You have a nice house"),
+    ],
+    "fill_in_the_blank": [
+      ("I ___ music.", "love"),
+      ("The dog is ___", "barking"),
+      ("He is reading ___ book.", "a"),
+      ("You ___ a nice house.", "have"),
     ]
   },
   # Difícil
@@ -121,6 +145,12 @@ QUESTIONS = {
        "She isn't my sister"),
       ("Which is correct?", ["It is a beautiful day", "It are a beautiful day",
                              "It is beautiful day"], "It is a beautiful day"),
+    ],
+    "fill_in_the_blank": [
+      ("We ___ happy.", "are"),
+      ("The children ___ playing.", "are"),
+      ("She ___ my sister.", "is"),
+      ("It is a ___ day.", "beautiful"),
     ]
   }
 }
