@@ -144,7 +144,7 @@ class Character(ABC):
       return
     if self.attack_cooldown_timer > 0:
       return
-    self.handle_attack_animation()
+    self.animate_attack()
     self.attack_timer = self.ATTACK_DISPLAY_FRAMES
     self.attack_cooldown_timer = self.attack_cooldown
     if self.can_attack(other):
@@ -160,7 +160,7 @@ class Character(ABC):
         if miss_sound:
           miss_sound.play()
 
-  def handle_attack_animation(self) -> None:
+  def animate_attack(self) -> None:
     attack_sprite = self.sprites.get("attack", self.image)
     if self.last_horizontal_direction == 1:
       self.image = pygame.transform.flip(attack_sprite, True, False)
@@ -278,12 +278,12 @@ class Character(ABC):
     pygame.draw.rect(surface, Color.HEALTH_BAR_BORDER,
                      (x, y, bar_width, bar_height), 1)
 
-  @abstractmethod
   def draw(self, surface: Surface) -> None:
     """
-    Draws the character on the given surface.
+    Draws the zombie and its health bar on the given surface.
     """
-    pass
+    surface.blit(self.image, (self.x, self.y))
+    self.draw_health_bar(surface)
 
 
 class Hero(Character):
@@ -316,13 +316,6 @@ class Hero(Character):
     ]
     self.step_channel = pygame.mixer.Channel(5)
 
-  def draw(self, surface: Surface) -> None:
-    """
-    Draws the hero and its health bar on the given surface.
-    """
-    surface.blit(self.image, (self.x, self.y))
-    self.draw_health_bar(surface)
-
 
 class Zombie(Character):
   """Class representing a zombie enemy."""
@@ -347,10 +340,3 @@ class Zombie(Character):
     self.step_sounds = []
     self.walk_frame_delay_normal = WALK_FRAME_DELAY_NORMAL
     self.walk_frame_delay_border = WALK_FRAME_DELAY_BORDER
-
-  def draw(self, surface: Surface) -> None:
-    """
-    Draws the zombie and its health bar on the given surface.
-    """
-    surface.blit(self.image, (self.x, self.y))
-    self.draw_health_bar(surface)
