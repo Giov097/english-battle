@@ -31,3 +31,4 @@ class Color:
   WALL_COLOR_BEACH: tuple[int, int, int] = (232, 197, 181)
   WALL_COLOR_BRICKDUST: tuple[int, int, int] = (82, 26, 0)
   WALL_COLOR_SNOW: tuple[int, int, int] = (200, 200, 255)
+  FEEDBACK_BG: tuple[int, int, int, int] = (30, 30, 30, 180)

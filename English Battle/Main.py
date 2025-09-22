@@ -13,7 +13,7 @@ from Sound import SOUNDS
 from Sprite.Backgrounds import BACKGROUNDS
 from lib.Color import Color
 from lib.Core import Hero, Zombie
-from lib.Level import Level, Combat, LevelType, Door
+from lib.Level import Level, Combat, LevelType, Door, FeedbackBox
 from lib.Var import FONT, LEVELS_CONFIG
 
 pygame.init()
@@ -39,6 +39,8 @@ combat_instance: Optional[Combat] = None
 combat_input_text = ""
 combat_result_text = ""
 font = pygame.font.SysFont(FONT, 24)
+
+feedbackBox = FeedbackBox.get_instance()
 
 
 def handle_events() -> None:
@@ -201,8 +203,8 @@ def draw_game() -> None:
   combat = level.get_combat_instance()
   combat_modal = level.get_combat_modal()
   if combat is not None and combat.get_active() and combat_modal:
-    # El modal ya dibuja su propio fondo semitransparente y prompt
     combat_modal.draw(window)
+  feedbackBox.draw(window)
   pygame.display.flip()
 
 
@@ -312,6 +314,7 @@ def level_select_menu(bg_img: Surface) -> Optional[int]:
 def setup_level(level_idx: int) -> None:
   """Initializes the level and characters according to selected config."""
   global character, level, zombies
+  print("init")
   config = LEVELS_CONFIG[level_idx]
   character = Hero(50, 50, health=50)
   level = Level(window_size=DEFAULT_WINDOW_SIZE,
@@ -320,6 +323,7 @@ def setup_level(level_idx: int) -> None:
                 background_name=config["background"],
                 wall_color=config["wall_color"])
   zombies = level.generate_zombies(config["num_zombies"])
+  feedbackBox.set_message("Bienvenido!", 3, 2)
 
 
 def main_menu() -> None:

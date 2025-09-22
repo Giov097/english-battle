@@ -2,11 +2,15 @@
 from pygame import Rect, Surface
 import random
 from enum import Enum
+import time
+
+from lib.Color import Color
 
 import pygame
 from pygame.event import EventType
 from pygame.font import FontType
 from pygame.mixer import Channel
+from timeit import default_timer as timer
 
 from Sprite.Backgrounds import BACKGROUNDS
 from Sprite.Levels import DOOR_1_SPRITES, MEDKIT_SPRITES
@@ -18,9 +22,8 @@ from lib.Var import (
   DEFAULT_WINDOW_SIZE,
   DEFAULT_WALL_THICKNESS,
   DEFAULT_CELL_SIZE,
-  QUESTIONS,
+  QUESTIONS, FONT,
 )
-from lib.Color import Color
 
 
 class LevelType(Enum):
@@ -333,3 +336,89 @@ class Level:
                                   24)
         if hero_rect.colliderect(medkit_rect):
           medkit.apply(hero)
+
+
+class FeedbackBox:
+  """Singleton class to show feedback messages on the screen with auto-hide."""
+
+  __instance = None
+
+  def __init__(self, font: str = FONT, width: int = 160, height: int = 24,
+      margin: int = 12) -> None:
+    """
+    Initializes the FeedbackBox singleton.
+    """
+    if FeedbackBox.__instance is not None:
+      raise Exception(
+          "Use FeedbackBox.get_instance() to get the singleton instance.")
+    self.__message = ""
+    self.__font = pygame.font.SysFont(font, 12)
+    self.__width = width
+    self.__height = height
+    self.__margin = margin
+    self.__duration = 5.0
+    self.__start_time = None
+    self.__delay = 0.0
+    self.__delay_start_time = None
+    FeedbackBox.__instance = self
+
+  @staticmethod
+  def get_instance() -> 'FeedbackBox':
+    """
+    Returns the singleton instance of FeedbackBox, creating it if necessary.
+    """
+    if FeedbackBox.__instance is None:
+      FeedbackBox()
+    return FeedbackBox.__instance
+
+  @staticmethod
+  def set_message(msg: str, duration: float = 5.0, delay: float = 0.0) -> None:
+    """
+    Sets the feedback message globally, with optional delay before showing.
+    """
+    box = FeedbackBox.get_instance()
+    box._set_message(msg, duration, delay)
+
+  def _set_message(self, msg: str, duration: float = 5.0,
+      delay: float = 0.0) -> None:
+    if msg != self.__message:
+      self.__message = msg
+      self.__duration = duration
+      self.__delay = delay
+      self.__delay_start_time = time.time() if delay > 0 else None
+      self.__start_time = None if delay > 0 else time.time()
+
+  def get_message(self) -> str:
+    """
+    Returns the current feedback message.
+    """
+    return self.__message
+
+  def clear(self) -> None:
+    """
+    Clears the feedback message immediately.
+    """
+    self.__message = ""
+    self.__start_time = None
+
+  def draw(self, surface: pygame.Surface) -> None:
+    """
+    Draws the feedback box on the given surface if time not expired and delay passed.
+    """
+    if self.__message:
+      if self.__delay > 0 and self.__delay_start_time is not None:
+        elapsed_delay = time.time() - self.__delay_start_time
+        if elapsed_delay > self.__delay:
+          self.__start_time = time.time()
+          self.__delay = 0
+          self.__delay_start_time = None
+          pygame.mixer.find_channel().play(SOUNDS["ui_rollover"])
+      if self.__start_time is not None:
+        elapsed = time.time() - self.__start_time
+        box = pygame.Surface((self.__width, self.__height), pygame.SRCALPHA)
+        box.fill(Color.FEEDBACK_BG)
+        surface.blit(box, (self.__margin, self.__margin))
+        txt = self.__font.render(self.__message, True, (255, 255, 255))
+        surface.blit(txt, (self.__margin + 16, self.__margin + 12))
+        if elapsed > self.__duration:
+          self.clear()
