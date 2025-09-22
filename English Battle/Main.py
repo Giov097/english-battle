@@ -49,14 +49,14 @@ def handle_events() -> None:
       repeat = False
     level.handle_combat_event(event, font)
     combat = level.get_combat_instance()
-    if combat is not None and combat.active:
+    if combat is not None and combat.get_active():
       handle_combat_input(event)
 
 
 def handle_combat_input(event) -> None:
   """Combat input handling."""
   global combat_instance, combat_input_text, combat_result_text
-  if combat_instance is not None and combat_instance.active:
+  if combat_instance is not None and combat_instance.get_active():
     if event.type == pygame.KEYDOWN:
       if event.key == pygame.K_RETURN:
         if combat_input_text.strip():
@@ -94,7 +94,7 @@ def move_character() -> None:
     moving = True
 
   combat_instance = level.get_combat_instance()
-  if combat_instance is None or not combat_instance.active:
+  if combat_instance is None or not combat_instance.get_active():
     character.move(dx, dy, moving, DEFAULT_WINDOW_SIZE[0],
                    DEFAULT_WINDOW_SIZE[1],
                    level=level, other_characters=zombies)
@@ -119,7 +119,7 @@ def handle_attack() -> None:
   keys = pygame.key.get_pressed()
   if keys[pygame.K_x]:
     if not attack_pressed and (
-        combat_instance is None or not combat_instance.active):
+        combat_instance is None or not combat_instance.get_active()):
       target = _find_attackable_zombie()
       if target:
         character.attack(target)
@@ -138,11 +138,11 @@ def _find_attackable_zombie() -> Optional[Zombie]:
   target = None
   for zombie in zombies:
     if zombie.is_alive():
-      hero_center = (character.x + 23 // 2, character.y + 30 // 2)
-      zombie_center = (zombie.x + 23 // 2, zombie.y + 30 // 2)
+      hero_center = (character.get_x() + 23 // 2, character.get_y() + 30 // 2)
+      zombie_center = (zombie.get_x() + 23 // 2, zombie.get_y() + 30 // 2)
       dist = ((hero_center[0] - zombie_center[0]) ** 2 +
               (hero_center[1] - zombie_center[1]) ** 2) ** 0.5
-      if dist <= character.attack_range and dist < min_dist:
+      if dist <= character.get_attack_range() and dist < min_dist:
         target = zombie
         min_dist = dist
   return target
@@ -154,8 +154,8 @@ def _find_closest_zombie() -> Optional[Zombie]:
   closest = None
   for zombie in zombies:
     if zombie.is_alive():
-      hero_center = (character.x + 23 // 2, character.y + 30 // 2)
-      zombie_center = (zombie.x + 23 // 2, zombie.y + 30 // 2)
+      hero_center = (character.get_x() + 23 // 2, character.get_y() + 30 // 2)
+      zombie_center = (zombie.get_x() + 23 // 2, zombie.get_y() + 30 // 2)
       dist = ((hero_center[0] - zombie_center[0]) ** 2 +
               (hero_center[1] - zombie_center[1]) ** 2) ** 0.5
       if dist < min_dist:
@@ -170,7 +170,7 @@ def move_zombies() -> None:
   zombie_move_counter += 1
   if zombie_move_counter >= ZOMBIE_MOVE_INTERVAL:
     combat_instance = level.get_combat_instance()
-    if combat_instance is None or not combat_instance.active:
+    if combat_instance is None or not combat_instance.get_active():
       for zombie in zombies:
         if not zombie.is_alive():
           continue
@@ -198,9 +198,9 @@ def draw_game() -> None:
       zombie.draw(window)
 
   # Interfaz gráfica para combate
-  combat_instance = level.get_combat_instance()
+  combat = level.get_combat_instance()
   combat_modal = level.get_combat_modal()
-  if combat_instance is not None and combat_instance.active and combat_modal:
+  if combat is not None and combat.get_active() and combat_modal:
     # El modal ya dibuja su propio fondo semitransparente y prompt
     combat_modal.draw(window)
   pygame.display.flip()
@@ -367,9 +367,9 @@ def check_advance_level() -> None:
   """Checks if the hero crosses the open door and advances to the next level."""
   global level, character, zombies
   door: Door = level.get_door()
-  if door and door.state == "open":
-    hero_rect = pygame.Rect(character.x, character.y, 23, 30)
-    door_rect = pygame.Rect(door.position[0], door.position[1], 10, 14)
+  if door and door.get_state() == "open":
+    hero_rect = pygame.Rect(character.get_x(), character.get_y(), 23, 30)
+    door_rect = pygame.Rect(door.get_x(), door.get_y(), 10, 14)
     if hero_rect.colliderect(door_rect):
       sound = SOUNDS.get("latchunlocked2")
       transition_black_screen()
@@ -388,8 +388,8 @@ def get_next_level_index() -> int | None:
   # No es confiable, mejor buscar por config
   current_idx = None
   for idx, lvl in enumerate(LEVELS_CONFIG):
-    if lvl["difficulty"] == level.difficulty and lvl[
-      "type"] == level.level_type.value:
+    if lvl["difficulty"] == level.get_difficulty() and lvl[
+      "type"] == level.get_level_type().value:
       current_idx = idx
       break
   if current_idx is not None and current_idx + 1 < len(LEVELS_CONFIG):
