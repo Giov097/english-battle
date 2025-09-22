@@ -317,7 +317,8 @@ def setup_level(level_idx: int) -> None:
   level = Level(window_size=DEFAULT_WINDOW_SIZE,
                 difficulty=config["difficulty"],
                 level_type=get_level_type(config["type"]),
-                background_name=config["background"])
+                background_name=config["background"],
+                wall_color=config["wall_color"])
   zombies = level.generate_zombies(config["num_zombies"])
 
 

@@ -37,7 +37,8 @@ class Level:
       background_name: str,
       difficulty: int,
       level_type: LevelType,
-      window_size: tuple[int, int] = DEFAULT_WINDOW_SIZE) -> None:
+      window_size: tuple[int, int] = DEFAULT_WINDOW_SIZE,
+      wall_color: tuple[int, int, int] = Color.WALL_COLOR_DEFAULT) -> None:
     """
     Initializes the Level with maze, background, and questions.
     """
@@ -58,6 +59,7 @@ class Level:
     self.__medkits = self._spawn_medkits()
     self.__combat_instance: 'Combat | None' = None
     self.__combat_modal: 'BaseCombatModal | None' = None
+    self.__wall_color = wall_color
 
   def get_level_type(self) -> LevelType:
     """Returns the level type."""
@@ -102,8 +104,7 @@ class Level:
     return self.__door
 
   @staticmethod
-  def _init_maze_structures(cols: int, rows: int) -> tuple[
-    list[list[bool]], list[list[bool]], list[list[bool]]]:
+  def _init_maze_structures(cols: int, rows: int) -> tuple:
     """
     Initializes the structures for maze generation.
     """
@@ -196,7 +197,7 @@ class Level:
   def draw_maze(self, surface: Surface) -> None:
     """Draws the maze walls and the door on the given surface."""
     for wall in self.__maze_walls:
-      pygame.draw.rect(surface, Color.DEFAULT_WALL_COLOR, wall)
+      pygame.draw.rect(surface, self.__wall_color, wall)
     if self.__door:
       if self.__door.get_state() == "opening":
         self.__door.animate_opening()

@@ -1,4 +1,7 @@
 """Global variables"""
+from typing import Any
+
+from lib.Color import Color
 
 DEFAULT_CHARACTER_SIZE = (23, 30)
 WALK_FRAME_DELAY_NORMAL = 5
@@ -155,110 +158,125 @@ QUESTIONS = {
   }
 }
 
-LEVELS_CONFIG = [
+LEVELS_CONFIG: list[dict[str, Any]] = [
   {
     "name": "Nivel 1.1 - Multiple Choice",
     "difficulty": 1,
     "type": "multiple_choice",
     "num_zombies": 3,
-    "background": "grass"
+    "background": "grass",
+    "wall_color": Color.WALL_COLOR_GRASS
   },
   {
     "name": "Nivel 1.2 - Word Ordering",
     "difficulty": 1,
     "type": "word_ordering",
     "num_zombies": 3,
-    "background": "grass"
+    "background": "grass",
+    "wall_color": Color.WALL_COLOR_GRASS
   },
   {
     "name": "Nivel 1.3 - Fill in the Blank",
     "difficulty": 1,
     "type": "fill_in_the_blank",
     "num_zombies": 3,
-    "background": "grass"
+    "background": "grass",
+    "wall_color": Color.WALL_COLOR_GRASS
   },
   {
     "name": "Nivel 2.1 - Multiple Choice",
     "difficulty": 2,
     "type": "multiple_choice",
     "num_zombies": 4,
-    "background": "cave"
+    "background": "cave",
+    "wall_color": Color.WALL_COLOR_CAVE
   },
   {
     "name": "Nivel 2.2 - Word Ordering",
     "difficulty": 2,
     "type": "word_ordering",
     "num_zombies": 4,
-    "background": "cave"
+    "background": "cave",
+    "wall_color": Color.WALL_COLOR_CAVE
   },
   {
     "name": "Nivel 2.3 - Fill in the Blank",
     "difficulty": 2,
     "type": "fill_in_the_blank",
     "num_zombies": 4,
-    "background": "cave"
+    "background": "cave",
+    "wall_color": Color.WALL_COLOR_CAVE
   },
   {
     "name": "Nivel 3.1 - Multiple Choice",
     "difficulty": 3,
     "type": "multiple_choice",
     "num_zombies": 5,
-    "background": "beach"
+    "background": "beach",
+    "wall_color": Color.WALL_COLOR_BEACH
   },
   {
     "name": "Nivel 3.2 - Word Ordering",
     "difficulty": 3,
     "type": "word_ordering",
     "num_zombies": 5,
-    "background": "beach"
+    "background": "beach",
+    "wall_color": Color.WALL_COLOR_BEACH
   },
   {
     "name": "Nivel 3.3 - Fill in the Blank",
     "difficulty": 3,
     "type": "fill_in_the_blank",
     "num_zombies": 5,
-    "background": "beach"
+    "background": "beach",
+    "wall_color": Color.WALL_COLOR_BEACH
   },
   {
     "name": "Nivel 4.1 - Multiple Choice",
     "difficulty": 4,
     "type": "multiple_choice",
     "num_zombies": 7,
-    "background": "brick-dust"
+    "background": "brick-dust",
+    "wall_color": Color.WALL_COLOR_BRICKDUST
   },
   {
     "name": "Nivel 4.2 - Word Ordering",
     "difficulty": 4,
     "type": "word_ordering",
     "num_zombies": 7,
-    "background": "brick-dust"
+    "background": "brick-dust",
+    "wall_color": Color.WALL_COLOR_BRICKDUST
   },
   {
     "name": "Nivel 4.3 - Fill in the Blank",
     "difficulty": 4,
     "type": "fill_in_the_blank",
     "num_zombies": 7,
-    "background": "brick-dust"
+    "background": "brick-dust",
+    "wall_color": Color.WALL_COLOR_BRICKDUST
   },
   {
     "name": "Nivel 5.1 - Multiple Choice",
     "difficulty": 5,
     "type": "multiple_choice",
     "num_zombies": 8,
-    "background": "moon"
+    "background": "moon",
+    "wall_color": Color.WALL_COLOR_SNOW
   },
   {
     "name": "Nivel 5.2 - Word Ordering",
     "difficulty": 5,
     "type": "word_ordering",
     "num_zombies": 8,
-    "background": "moon"
+    "background": "moon",
+    "wall_color": Color.WALL_COLOR_SNOW
   },
   {
     "name": "Nivel 5.3 - Fill in the Blank",
     "difficulty": 5,
     "type": "fill_in_the_blank",
     "num_zombies": 8,
-    "background": "moon"
+    "background": "moon",
+    "wall_color": Color.WALL_COLOR_SNOW
   }
 ]
