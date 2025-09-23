@@ -287,7 +287,9 @@ class Level:
         if player_answer:
           result = self.__combat_instance.process_turn(player_answer.strip())
           self.__combat_modal.set_result_text(result)
+          FeedbackBox.get_instance().set_message(result, 3, 0)
           if self.__combat_instance.get_active():
+
             if self.__combat_instance.get_combat_type() == "word_ordering":
               words = self.__combat_instance.get_current_question().split(" / ")
               self.__combat_modal = WordOrderingModal(words, font,

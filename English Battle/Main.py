@@ -43,6 +43,7 @@ font = pygame.font.SysFont(FONT, 24)
 feedbackBox = FeedbackBox.get_instance()
 first_level: bool = True
 
+
 def handle_events() -> None:
   """Handles all pygame events."""
   global repeat, combat_input_text, combat_result_text
@@ -177,7 +178,8 @@ def move_zombies() -> None:
         if not zombie.is_alive():
           continue
         zdx, zdy = 0, 0
-        direction = random.choice([(1, 0), (-1, 0), (0, 1), (0, -1), (0, 0)])
+        direction = random.choice(
+            [(15, 0), (-15, 0), (0, 15), (0, -15), (0, 0)])
         zdx, zdy = direction
         if zdx != 0 or zdy != 0:
           other_chars = [character] + [z for z in zombies if z is not zombie]
