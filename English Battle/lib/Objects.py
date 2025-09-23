@@ -91,6 +91,7 @@ class Medkit:
     self.__image = self.__sprites["base"]
     self.__used = False
     self.__sounds = [SOUNDS.get("smallmedkit1"), SOUNDS.get("smallmedkit2")]
+    self.__heal_amount = 25
 
   def get_x(self) -> int:
     """
@@ -115,8 +116,8 @@ class Medkit:
     """
     Heals the hero and plays a sound.
     """
-    if not self.__used and hero.__health < hero.__max_health:
-      hero.__health = min(hero.__max_health, hero.__health + 25)
+    if not self.__used and hero.get_health() < hero.get_max_health():
+      hero.apply_medkit(self)
       self.__used = True
       sound = random.choice(self.__sounds)
       if sound:
@@ -127,3 +128,9 @@ class Medkit:
     Returns whether the medkit has been used.
     """
     return self.__used
+
+  def get_heal_amount(self) -> int:
+    """
+    Returns the amount of health the medkit restores.
+    """
+    return self.__heal_amount

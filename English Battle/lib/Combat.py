@@ -11,7 +11,6 @@ from pygame.font import FontType
 
 from lib.Color import Color
 
-
 class Combat:
   """Class to manage combat encounters with grammar questions."""
 
@@ -313,13 +312,13 @@ class WordOrderingModal(BaseCombatModal):
       txt = self.get_font().render(word, True, Color.TITLE_TEXT)
       surface.blit(txt, (drag_rect.x + 6, drag_rect.y + 4))
     self._draw_buttons(surface)
-    if self.get_result_text():
-      result_color = Color.CORRECT_ANSWER_BG if "Correcto" in self.get_result_text() else Color.WRONG_ANSWER_BG
-      result_surface = self.get_font().render(self.get_result_text(), True,
-                                              result_color)
-      result_x = self.get_rect().x + 10
-      result_y = self.get_confirm_button().bottom + 10
-      surface.blit(result_surface, (result_x, result_y))
+    #if self.get_result_text():
+      # result_color = Color.CORRECT_ANSWER_BG if "Correcto" in self.get_result_text() else Color.WRONG_ANSWER_BG
+      # result_surface = self.get_font().render(self.get_result_text(), True,
+      #                                         result_color)
+      # result_x = self.get_rect().x + 10
+      # result_y = self.get_confirm_button().bottom + 10
+      # surface.blit(result_surface, (result_x, result_y))
 
   def handle_event(self, event: EventType) -> None:
     """

@@ -41,6 +41,7 @@ combat_result_text = ""
 font = pygame.font.SysFont(Var.FONT, 24)
 
 feedbackBox = FeedbackBox.get_instance()
+first_level: bool = True
 
 
 def handle_events() -> None:
@@ -177,7 +178,8 @@ def move_zombies() -> None:
         if not zombie.is_alive():
           continue
         zdx, zdy = 0, 0
-        direction = random.choice([(1, 0), (-1, 0), (0, 1), (0, -1), (0, 0)])
+        direction = random.choice(
+            [(15, 0), (-15, 0), (0, 15), (0, -15), (0, 0)])
         zdx, zdy = direction
         if zdx != 0 or zdy != 0:
           other_chars = [character] + [z for z in zombies if z is not zombie]
@@ -287,8 +289,8 @@ def get_level_type(type_str: str) -> LevelType:
 
 def level_select_menu(bg_img: Surface) -> Optional[int]:
   """Displays the level selection menu and handles navigation."""
-  font_menu = pygame.font.SysFont(Var.FONT, 32)
-  levels = [lvl["name"] for lvl in Var.LEVELS_CONFIG]
+  font_menu = pygame.font.SysFont(FONT, 32)
+  levels = [lvl["name"] for lvl in LEVELS_CONFIG]
   levels.append("Volver")
   selected = 0
   level_selected = False
@@ -313,8 +315,8 @@ def level_select_menu(bg_img: Surface) -> Optional[int]:
 
 def setup_level(level_idx: int) -> None:
   """Initializes the level and characters according to selected config."""
-  global character, level, zombies
-  print("init")
+  global character, level, zombies, first_level
+  print("Initializing level:", Var.LEVELS_CONFIG[level_idx]["name"])
   config = Var.LEVELS_CONFIG[level_idx]
   character = Hero(50, 50, health=50)
   level = Level(window_size=DEFAULT_WINDOW_SIZE,
@@ -323,7 +325,9 @@ def setup_level(level_idx: int) -> None:
                 background_name=config["background"],
                 wall_color=config["wall_color"])
   zombies = level.generate_zombies(config["num_zombies"])
-  feedbackBox.set_message("Bienvenido!", 3, 2)
+  if first_level:
+    feedbackBox.set_message("Bienvenido!", 3, 2)
+    first_level = False
 
 
 def main_menu() -> None:

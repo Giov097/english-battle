@@ -82,6 +82,12 @@ class Character(ABC):
     """Get the current health of the character."""
     return self.__health
 
+  def _set_health(self, health: int) -> None:
+    """Set the current health of the character."""
+    self.__health = max(0, min(health, self.__max_health))
+    if not self.is_alive():
+      self._set_dead_sprite()
+
   def get_max_health(self) -> int:
     """Get the maximum health of the character."""
     return self.__max_health
@@ -353,6 +359,13 @@ class Hero(Character):
       SOUNDS.get("pl_step4")
     ])
     self.set_step_channel(pygame.mixer.Channel(5))
+
+  def apply_medkit(self, medkit: 'Medkit') -> None:
+    """Applies a medkit to heal the hero."""
+    if not medkit.get_used() and self.get_health() < self.get_max_health():
+      heal_amount = medkit.get_heal_amount()
+      new_health = min(self.get_health() + heal_amount, self.get_max_health())
+      self._set_health(new_health)
 
 
 class Zombie(Character):
