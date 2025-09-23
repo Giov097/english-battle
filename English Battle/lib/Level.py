@@ -1,29 +1,22 @@
 """Module for generating and managing maze levels in a game."""
-from pygame import Rect, Surface
 import random
-from enum import Enum
 import time
-
-from lib.Color import Color
+from enum import Enum
 
 import pygame
+from pygame import Rect, Surface
 from pygame.event import EventType
 from pygame.font import FontType
 from pygame.mixer import Channel
-from timeit import default_timer as timer
 
+from Sound import SOUNDS
 from Sprite.Backgrounds import BACKGROUNDS
 from Sprite.Levels import DOOR_1_SPRITES, MEDKIT_SPRITES
-from Sound import SOUNDS
+from lib.Color import Color
 from lib.Combat import Combat, WordOrderingModal, MultipleChoiceModal, \
   FillGapsModal
 from lib.Objects import Door, Medkit
-from lib.Var import (
-  DEFAULT_WINDOW_SIZE,
-  DEFAULT_WALL_THICKNESS,
-  DEFAULT_CELL_SIZE,
-  QUESTIONS, FONT,
-)
+from lib.Var import Var
 
 
 class LevelType(Enum):
@@ -40,7 +33,7 @@ class Level:
       background_name: str,
       difficulty: int,
       level_type: LevelType,
-      window_size: tuple[int, int] = DEFAULT_WINDOW_SIZE,
+      window_size: tuple[int, int] = Var.DEFAULT_WINDOW_SIZE,
       wall_color: tuple[int, int, int] = Color.WALL_COLOR_DEFAULT) -> None:
     """
     Initializes the Level with maze, background, and questions.
@@ -55,7 +48,7 @@ class Level:
         self.__window_size)
     self.__difficulty: int = difficulty
     self.__level_type: LevelType = level_type
-    self.__questions_set = QUESTIONS.get(self.__difficulty, {}).get(
+    self.__questions_set = Var.QUESTIONS.get(self.__difficulty, {}).get(
         self.__level_type.value,
         [])
     self.__door = self._spawn_door()
@@ -173,8 +166,8 @@ class Level:
     return walls
 
   def _generate_random_maze(self, window_size: tuple[int, int],
-      wall_thickness: int = DEFAULT_WALL_THICKNESS,
-      cell_size: int = DEFAULT_CELL_SIZE) -> list[Rect]:
+      wall_thickness: int = Var.DEFAULT_WALL_THICKNESS,
+      cell_size: int = Var.DEFAULT_CELL_SIZE) -> list[Rect]:
     """
     Generates a random maze using DFS algorithm.
     """
@@ -343,7 +336,7 @@ class FeedbackBox:
 
   __instance = None
 
-  def __init__(self, font: str = FONT, width: int = 160, height: int = 24,
+  def __init__(self, font: str = Var.FONT, width: int = 160, height: int = 24,
       margin: int = 12) -> None:
     """
     Initializes the FeedbackBox singleton.
@@ -352,7 +345,7 @@ class FeedbackBox:
       raise Exception(
           "Use FeedbackBox.get_instance() to get the singleton instance.")
     self.__message = ""
-    self.__font = pygame.font.SysFont(font, 12)
+    self.__font = pygame.font.SysFont(font, 16)
     self.__width = width
     self.__height = height
     self.__margin = margin
@@ -394,7 +387,7 @@ class FeedbackBox:
     """
     return self.__message
 
-  def clear(self) -> None:
+  def _clear(self) -> None:
     """
     Clears the feedback message immediately.
     """
@@ -418,7 +411,7 @@ class FeedbackBox:
         box = pygame.Surface((self.__width, self.__height), pygame.SRCALPHA)
         box.fill(Color.FEEDBACK_BG)
         surface.blit(box, (self.__margin, self.__margin))
-        txt = self.__font.render(self.__message, True, (255, 255, 255))
-        surface.blit(txt, (self.__margin + 16, self.__margin + 12))
+        txt = self.__font.render(self.__message, True, Var.TEXT_COLOR)
+        surface.blit(txt, (self.__margin + 16, self.__margin + 9))
         if elapsed > self.__duration:
-          self.clear()
+          self._clear()

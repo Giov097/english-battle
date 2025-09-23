@@ -14,7 +14,7 @@ from Sprite.Backgrounds import BACKGROUNDS
 from lib.Color import Color
 from lib.Core import Hero, Zombie
 from lib.Level import Level, Combat, LevelType, Door, FeedbackBox
-from lib.Var import FONT, LEVELS_CONFIG
+from lib.Var import Var
 
 pygame.init()
 
@@ -38,7 +38,7 @@ attack_pressed: bool = False
 combat_instance: Optional[Combat] = None
 combat_input_text = ""
 combat_result_text = ""
-font = pygame.font.SysFont(FONT, 24)
+font = pygame.font.SysFont(Var.FONT, 24)
 
 feedbackBox = FeedbackBox.get_instance()
 
@@ -254,7 +254,7 @@ def draw_level_select(win: Surface, menu_font: FontType,
   title = menu_font.render("Selecciona nivel", True, (255, 255, 255))
   win.blit(title, (DEFAULT_WINDOW_SIZE[0] // 2 - title.get_width() // 2, 60))
 
-  level_font = pygame.font.SysFont(FONT, 20)
+  level_font = pygame.font.SysFont(Var.FONT, 20)
   max_visible = 7
   half = max_visible // 2
   start_idx = max(0, selected_idx - half)
@@ -287,8 +287,8 @@ def get_level_type(type_str: str) -> LevelType:
 
 def level_select_menu(bg_img: Surface) -> Optional[int]:
   """Displays the level selection menu and handles navigation."""
-  font_menu = pygame.font.SysFont(FONT, 32)
-  levels = [lvl["name"] for lvl in LEVELS_CONFIG]
+  font_menu = pygame.font.SysFont(Var.FONT, 32)
+  levels = [lvl["name"] for lvl in Var.LEVELS_CONFIG]
   levels.append("Volver")
   selected = 0
   level_selected = False
@@ -315,7 +315,7 @@ def setup_level(level_idx: int) -> None:
   """Initializes the level and characters according to selected config."""
   global character, level, zombies
   print("init")
-  config = LEVELS_CONFIG[level_idx]
+  config = Var.LEVELS_CONFIG[level_idx]
   character = Hero(50, 50, health=50)
   level = Level(window_size=DEFAULT_WINDOW_SIZE,
                 difficulty=config["difficulty"],
@@ -328,7 +328,7 @@ def setup_level(level_idx: int) -> None:
 
 def main_menu() -> None:
   """Displays the main menu and handles navigation."""
-  font_menu = pygame.font.SysFont(FONT, 32)
+  font_menu = pygame.font.SysFont(Var.FONT, 32)
   bg_img = pygame.transform.scale(random.choice(list(BACKGROUNDS.items()))[1],
                                   DEFAULT_WINDOW_SIZE)
   options = ["Nuevo juego", "Salir"]
@@ -392,12 +392,12 @@ def get_next_level_index() -> int | None:
   """Returns the index of the next level, or None if finished."""
   # No es confiable, mejor buscar por config
   current_idx = None
-  for idx, lvl in enumerate(LEVELS_CONFIG):
+  for idx, lvl in enumerate(Var.LEVELS_CONFIG):
     if lvl["difficulty"] == level.get_difficulty() and lvl[
       "type"] == level.get_level_type().value:
       current_idx = idx
       break
-  if current_idx is not None and current_idx + 1 < len(LEVELS_CONFIG):
+  if current_idx is not None and current_idx + 1 < len(Var.LEVELS_CONFIG):
     return current_idx + 1
   return None
 

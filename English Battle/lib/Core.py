@@ -9,13 +9,7 @@ from pygame.mixer import SoundType
 
 from lib.Level import Level
 from Sound import SOUNDS
-from lib.Var import (
-  DEFAULT_CHARACTER_SIZE,
-  WALK_FRAME_DELAY_NORMAL,
-  WALK_FRAME_DELAY_BORDER,
-  DAMAGE_DISPLAY_FRAMES,
-  ATTACK_DISPLAY_FRAMES,
-)
+from lib.Var import Var
 from lib.Color import Color
 
 
@@ -38,27 +32,28 @@ class Character(ABC):
     # Position and image
     self.__x = x
     self.__y = y
-    self.__image = pygame.transform.scale(image_path, DEFAULT_CHARACTER_SIZE)
+    self.__image = pygame.transform.scale(image_path,
+                                          Var.DEFAULT_CHARACTER_SIZE)
     self.__sprites = {}
     if sprites is not None:
       for key, sprite in sprites.items():
         self.__sprites[key] = pygame.transform.scale(sprite,
-                                                     DEFAULT_CHARACTER_SIZE)
+                                                     Var.DEFAULT_CHARACTER_SIZE)
     else:
       self.__sprites = {}
     # Walking animation
     self.__walking_sprites = []
     self.__walk_index = 0
     self.__walk_frame_count = 0
-    self.__walk_frame_delay_normal = WALK_FRAME_DELAY_NORMAL
-    self.__walk_frame_delay_border = WALK_FRAME_DELAY_BORDER
+    self.__walk_frame_delay_normal = Var.WALK_FRAME_DELAY_NORMAL
+    self.__walk_frame_delay_border = Var.WALK_FRAME_DELAY_BORDER
     self.__walk_frame_delay = self.__walk_frame_delay_normal
     self.__last_horizontal_direction = 1
     self.__damage_timer = 0
-    self.__DAMAGE_DISPLAY_FRAMES = DAMAGE_DISPLAY_FRAMES
+    self.__DAMAGE_DISPLAY_FRAMES = Var.DAMAGE_DISPLAY_FRAMES
     # Attack management
     self.__attack_timer = 0
-    self.__ATTACK_DISPLAY_FRAMES = ATTACK_DISPLAY_FRAMES
+    self.__ATTACK_DISPLAY_FRAMES = Var.ATTACK_DISPLAY_FRAMES
     self.__attack_cooldown = attack_cooldown
     self.__attack_cooldown_timer = 0
     # Sounds and step management
@@ -101,9 +96,10 @@ class Character(ABC):
       return
     self.__health -= amount
     if not self.is_alive():
-      if isinstance(self, Hero) and "dead" in self.__sprites:
-        dead_sprite = self.__sprites["dead"]
-        new_size = (DEFAULT_CHARACTER_SIZE[1], DEFAULT_CHARACTER_SIZE[0])
+      if isinstance(self, Hero) and "dead" in self.get_sprites():
+        dead_sprite = self.get_sprites()["dead"]
+        new_size = (Var.DEFAULT_CHARACTER_SIZE[1],
+                    Var.DEFAULT_CHARACTER_SIZE[0])
         self.__image = pygame.transform.scale(dead_sprite, new_size)
       else:
         self.__image = self.__sprites.get("dead", self.__image)
@@ -151,12 +147,12 @@ class Character(ABC):
   def can_attack(self, other: 'Character') -> bool:
     """Check if this character can attack another based on distance."""
     self_center = (
-      self.__x + DEFAULT_CHARACTER_SIZE[0] // 2,
-      self.__y + DEFAULT_CHARACTER_SIZE[1] // 2
+      self.__x + Var.DEFAULT_CHARACTER_SIZE[0] // 2,
+      self.__y + Var.DEFAULT_CHARACTER_SIZE[1] // 2
     )
     other_center = (
-      other.__x + DEFAULT_CHARACTER_SIZE[0] // 2,
-      other.__y + DEFAULT_CHARACTER_SIZE[1] // 2
+      other.__x + Var.DEFAULT_CHARACTER_SIZE[0] // 2,
+      other.__y + Var.DEFAULT_CHARACTER_SIZE[1] // 2
     )
     dist = ((self_center[0] - other_center[0]) ** 2 +
             (self_center[1] - other_center[1]) ** 2) ** 0.5
@@ -236,8 +232,8 @@ class Character(ABC):
     """Move the character by (dx, dy), handling collisions and updating sprite."""
     if not self.is_alive():
       return
-    sprite_width = DEFAULT_CHARACTER_SIZE[0]
-    sprite_height = DEFAULT_CHARACTER_SIZE[1]
+    sprite_width = Var.DEFAULT_CHARACTER_SIZE[0]
+    sprite_height = Var.DEFAULT_CHARACTER_SIZE[1]
 
     self.__try_move_x__(dx, window_width, sprite_width, sprite_height, level,
                         other_characters)
@@ -286,7 +282,7 @@ class Character(ABC):
     """
     Draws the health bar above the character.
     """
-    bar_width = DEFAULT_CHARACTER_SIZE[0]
+    bar_width = Var.DEFAULT_CHARACTER_SIZE[0]
     bar_height = 6
     x = self.__x
     y = self.__y - bar_height - 2
