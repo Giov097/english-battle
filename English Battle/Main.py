@@ -18,8 +18,7 @@ from lib.Var import Var
 
 pygame.init()
 
-DEFAULT_WINDOW_SIZE: tuple[int, int] = (640, 480)
-window: Surface = pygame.display.set_mode(DEFAULT_WINDOW_SIZE)
+window: Surface = pygame.display.set_mode(Var.DEFAULT_WINDOW_SIZE)
 pygame.display.set_caption("English Battle")
 zombies: list[Zombie] = []
 
@@ -98,8 +97,8 @@ def move_character() -> None:
 
   combat_instance = level.get_combat_instance()
   if combat_instance is None or not combat_instance.get_active():
-    character.move(dx, dy, moving, DEFAULT_WINDOW_SIZE[0],
-                   DEFAULT_WINDOW_SIZE[1],
+    character.move(dx, dy, moving, Var.DEFAULT_WINDOW_SIZE[0],
+                   Var.DEFAULT_WINDOW_SIZE[1],
                    level=level, other_characters=zombies)
   # Si hay combate, nadie se mueve (ni héroe ni zombies)
   else:
@@ -183,8 +182,8 @@ def move_zombies() -> None:
         zdx, zdy = direction
         if zdx != 0 or zdy != 0:
           other_chars = [character] + [z for z in zombies if z is not zombie]
-          zombie.move(zdx, zdy, True, DEFAULT_WINDOW_SIZE[0],
-                      DEFAULT_WINDOW_SIZE[1], level=level,
+          zombie.move(zdx, zdy, True, Var.DEFAULT_WINDOW_SIZE[0],
+                      Var.DEFAULT_WINDOW_SIZE[1], level=level,
                       other_characters=other_chars)
     zombie_move_counter = 0
 
@@ -225,17 +224,18 @@ def draw_menu(menu_window: Surface, menu_font: FontType,
   Draws main menu.
   """
   menu_window.blit(background_img, (0, 0))
-  overlay = pygame.Surface(DEFAULT_WINDOW_SIZE)
+  overlay = pygame.Surface(Var.DEFAULT_WINDOW_SIZE)
   overlay.set_alpha(180)
   overlay.fill((0, 0, 0))
   menu_window.blit(overlay, (0, 0))
   title = menu_font.render("English Battle", True, (255, 255, 255))
   menu_window.blit(title,
-                   (DEFAULT_WINDOW_SIZE[0] // 2 - title.get_width() // 2, 60))
+                   (Var.DEFAULT_WINDOW_SIZE[0] // 2 - title.get_width() // 2,
+                    60))
   for idx, opt in enumerate(options):
     color = Color.MENU_SELECTED_BTN if idx == selected_idx else Color.MENU_UNSELECTED_BTN
     txt = menu_font.render(opt, True, color)
-    x = DEFAULT_WINDOW_SIZE[0] // 2 - txt.get_width() // 2
+    x = Var.DEFAULT_WINDOW_SIZE[0] // 2 - txt.get_width() // 2
     y = 160 + idx * 60
     menu_window.blit(txt, (x, y))
   pygame.display.flip()
@@ -249,12 +249,13 @@ def draw_level_select(win: Surface, menu_font: FontType,
   Draws level selection menu.
   """
   win.blit(background_img, (0, 0))
-  overlay = pygame.Surface(DEFAULT_WINDOW_SIZE)
+  overlay = pygame.Surface(Var.DEFAULT_WINDOW_SIZE)
   overlay.set_alpha(180)
   overlay.fill((0, 0, 0))
   win.blit(overlay, (0, 0))
   title = menu_font.render("Selecciona nivel", True, (255, 255, 255))
-  win.blit(title, (DEFAULT_WINDOW_SIZE[0] // 2 - title.get_width() // 2, 60))
+  win.blit(title,
+           (Var.DEFAULT_WINDOW_SIZE[0] // 2 - title.get_width() // 2, 60))
 
   level_font = pygame.font.SysFont(Var.FONT, 20)
   max_visible = 7
@@ -269,7 +270,7 @@ def draw_level_select(win: Surface, menu_font: FontType,
     real_idx = start_idx + idx
     color = (0, 255, 0) if real_idx == selected_idx else (255, 255, 255)
     txt = level_font.render(lvl, True, color)
-    x = DEFAULT_WINDOW_SIZE[0] // 2 - txt.get_width() // 2
+    x = Var.DEFAULT_WINDOW_SIZE[0] // 2 - txt.get_width() // 2
     y = 160 + idx * 36
     win.blit(txt, (x, y))
   pygame.display.flip()
@@ -319,7 +320,7 @@ def setup_level(level_idx: int) -> None:
   print("Initializing level:", Var.LEVELS_CONFIG[level_idx]["name"])
   config = Var.LEVELS_CONFIG[level_idx]
   character = Hero(50, 50, health=50)
-  level = Level(window_size=DEFAULT_WINDOW_SIZE,
+  level = Level(window_size=Var.DEFAULT_WINDOW_SIZE,
                 difficulty=config["difficulty"],
                 level_type=get_level_type(config["type"]),
                 background_name=config["background"],
@@ -334,7 +335,7 @@ def main_menu() -> None:
   """Displays the main menu and handles navigation."""
   font_menu = pygame.font.SysFont(Var.FONT, 32)
   bg_img = pygame.transform.scale(random.choice(list(BACKGROUNDS.items()))[1],
-                                  DEFAULT_WINDOW_SIZE)
+                                  Var.DEFAULT_WINDOW_SIZE)
   options = ["Nuevo juego", "Salir"]
   idx_selected = 0
   channel: Channel = pygame.mixer.find_channel()
