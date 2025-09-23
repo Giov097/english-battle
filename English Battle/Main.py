@@ -289,8 +289,8 @@ def get_level_type(type_str: str) -> LevelType:
 
 def level_select_menu(bg_img: Surface) -> Optional[int]:
   """Displays the level selection menu and handles navigation."""
-  font_menu = pygame.font.SysFont(FONT, 32)
-  levels = [lvl["name"] for lvl in LEVELS_CONFIG]
+  font_menu = pygame.font.SysFont(Var.FONT, 32)
+  levels = [lvl["name"] for lvl in Var.LEVELS_CONFIG]
   levels.append("Volver")
   selected = 0
   level_selected = False
