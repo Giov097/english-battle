@@ -33,6 +33,7 @@ class Level:
       background_name: str,
       difficulty: int,
       level_type: LevelType,
+      hero: 'Hero',
       window_size: tuple[int, int] = Var.DEFAULT_WINDOW_SIZE,
       wall_color: tuple[int, int, int] = Color.WALL_COLOR_DEFAULT) -> None:
     """
@@ -56,6 +57,7 @@ class Level:
     self.__combat_instance: 'Combat | None' = None
     self.__combat_modal: 'BaseCombatModal | None' = None
     self.__wall_color = wall_color
+    self.__hero = hero
 
   def get_level_type(self) -> LevelType:
     """Returns the level type."""
@@ -64,6 +66,10 @@ class Level:
   def get_difficulty(self) -> int:
     """Returns the difficulty level."""
     return self.__difficulty
+
+  def get_character(self) -> 'Hero':
+    """Returns the character associated with the level."""
+    return self.__hero
 
   def _spawn_door(self) -> 'Door':
     """Spawns a door in a valid position (not colliding with maze walls)."""
@@ -78,11 +84,10 @@ class Level:
     # Si no encuentra lugar, la pone en (0,0)
     return Door(0, 0, DOOR_1_SPRITES)
 
-  def _spawn_medkits(self) -> list[Medkit]:
+  def _spawn_medkits(self) -> list['Medkit']:
     """Spawns medkits randomly, less likely as difficulty increases."""
     medkits = []
     sprite_w, sprite_h = 24, 24
-    # Probabilidad inversa a la dificultad (más difícil, menos medkits)
     max_medkits = max(0, 2 - self.__difficulty)
     for _ in range(max_medkits):
       if random.random() < (1.0 - self.__difficulty * 0.15):
@@ -321,16 +326,17 @@ class Level:
       if all(not z.is_alive() for z in zombies):
         self.__door.open()
 
-  def check_medkit_pickup(self, hero: 'Hero') -> None:
+  def check_medkit_pickup(self) -> None:
     """Checks if hero picks up a medkit and heals."""
     for medkit in self.__medkits:
-      if not medkit.get_used() and hero.get_health() < hero.get_max_health():
-        hero_rect = pygame.Rect(hero.get_x(), hero.get_y(), 23, 30)
+      if not medkit.get_used() and self.__hero.get_health() < self.__hero.get_max_health():
+        hero_rect = pygame.Rect(self.__hero.get_x(), self.__hero.get_y(), 23,
+                                30)
         medkit_rect = pygame.Rect(medkit.get_x(), medkit.get_y(),
                                   24,
                                   24)
         if hero_rect.colliderect(medkit_rect):
-          medkit.apply(hero)
+          medkit.apply(self.__hero)
 
 
 class FeedbackBox:
@@ -377,6 +383,7 @@ class FeedbackBox:
   def _set_message(self, msg: str, duration: float = 5.0,
       delay: float = 0.0) -> None:
     if msg != self.__message:
+      print("Setting new message:", msg)
       self.__message = msg
       self.__duration = duration
       self.__delay = delay
@@ -417,3 +424,83 @@ class FeedbackBox:
         surface.blit(txt, (self.__margin + 16, self.__margin + 9))
         if elapsed > self.__duration:
           self._clear()
+
+
+class TutorialLevel(Level):
+  """Base class for tutorial levels."""
+
+  def __init__(self, config: dict, hero: 'Hero') -> None:
+    super().__init__(
+        background_name=config.get("background", "grass"),
+        difficulty=config.get("difficulty", 0),
+        level_type=LevelType[config.get("type").upper()] if config.get(
+            "type") and config.get(
+            "type") != "none" else LevelType.MULTIPLE_CHOICE,
+        window_size=Var.DEFAULT_WINDOW_SIZE,
+        wall_color=config.get("wall_color", Color.WALL_COLOR_GRASS),
+        hero=hero
+    )
+    self.__tutorial_config = config
+    self._show_message()
+
+  def _show_message(self) -> None:
+    msg = self.__tutorial_config.get("message")
+    if msg:
+      FeedbackBox.get_instance().set_message(msg, 8, 0.5)
+
+  def _generate_random_maze(self, window_size: tuple[int, int],
+      wall_thickness: int = Var.DEFAULT_WALL_THICKNESS,
+      cell_size: int = Var.DEFAULT_CELL_SIZE) -> list[Rect]:
+    return []
+
+  def _spawn_door(self) -> 'Door':
+    # Puerta en posición fija para tutorial
+    sprite_w, sprite_h = 40, 60
+    x = Var.DEFAULT_WINDOW_SIZE[0] - sprite_w - 30
+    y = Var.DEFAULT_WINDOW_SIZE[1] // 2 - sprite_h // 2
+    return Door(x, y, DOOR_1_SPRITES)
+
+  def _spawn_medkits(self) -> list['Medkit']:
+    return []
+
+  def generate_zombies(self, num_zombies: int) -> list['Zombie']:
+    return []
+
+
+class TutorialMoveLevel(TutorialLevel):
+  """Movement tutorial."""
+
+  def __init__(self, config: dict, hero: 'Hero') -> None:
+    super().__init__(config, hero)
+    self._show_message()
+
+
+class TutorialCombatLevel(TutorialLevel):
+  """Combat tutorial"""
+
+  def __init__(self, config: dict, hero: 'Hero') -> None:
+    super().__init__(config, hero)
+    self._show_message()
+
+  def generate_zombies(self, num_zombies: int):
+    """One zombie in fixed position for combat tutorial."""
+    from lib.Core import Zombie
+    sprite_w, sprite_h = (23, 30)
+    x = Var.DEFAULT_WINDOW_SIZE[0] // 2 - sprite_w // 2
+    y = Var.DEFAULT_WINDOW_SIZE[1] // 2 - sprite_h // 2
+    return [Zombie(x, y, health=10)]
+
+
+class TutorialHealLevel(TutorialLevel):
+  """Healing tutorial."""
+
+  def __init__(self, config: dict, hero: 'Hero') -> None:
+    super().__init__(config, hero)
+    self._show_message()
+    self.get_character().receive_damage(25)
+
+  def _spawn_medkits(self) -> list['Medkit']:
+    sprite_w, sprite_h = 24, 24
+    x = Var.DEFAULT_WINDOW_SIZE[0] // 2 - sprite_w // 2
+    y = Var.DEFAULT_WINDOW_SIZE[1] // 2 - sprite_h // 2
+    return [Medkit(x, y, MEDKIT_SPRITES)]

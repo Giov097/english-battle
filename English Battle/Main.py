@@ -11,9 +11,10 @@ from pygame.time import Clock
 
 from Sound import SOUNDS
 from Sprite.Backgrounds import BACKGROUNDS
+from lib import Functions
 from lib.Color import Color
 from lib.Core import Hero, Zombie
-from lib.Level import Level, Combat, LevelType, Door, FeedbackBox
+from lib.Level import Level, Combat, LevelType, Door, FeedbackBox, TutorialLevel
 from lib.Var import Var
 
 pygame.init()
@@ -41,6 +42,7 @@ font = pygame.font.SysFont(Var.FONT, 24)
 
 feedbackBox = FeedbackBox.get_instance()
 first_level: bool = True
+current_level_idx: int
 
 
 def handle_events() -> None:
@@ -320,19 +322,25 @@ def setup_level(level_idx: int) -> None:
   print("Initializing level:", Var.LEVELS_CONFIG[level_idx]["name"])
   config = Var.LEVELS_CONFIG[level_idx]
   character = Hero(50, 50, health=50)
-  level = Level(window_size=Var.DEFAULT_WINDOW_SIZE,
-                difficulty=config["difficulty"],
-                level_type=get_level_type(config["type"]),
-                background_name=config["background"],
-                wall_color=config["wall_color"])
+  if config.get("tutorial"):
+    level = Functions.create_level_from_config(config,
+                                               hero=character)
+  else:
+    level = Level(window_size=Var.DEFAULT_WINDOW_SIZE,
+                  difficulty=config["difficulty"],
+                  level_type=get_level_type(config["type"]),
+                  background_name=config["background"],
+                  wall_color=config["wall_color"],
+                  hero=character)
   zombies = level.generate_zombies(config["num_zombies"])
-  if first_level:
+  if not ("tutorial" in config and config["tutorial"]) and first_level:
     feedbackBox.set_message("Bienvenido!", 3, 2)
     first_level = False
 
 
 def main_menu() -> None:
   """Displays the main menu and handles navigation."""
+  global current_level_idx
   font_menu = pygame.font.SysFont(Var.FONT, 32)
   bg_img = pygame.transform.scale(random.choice(list(BACKGROUNDS.items()))[1],
                                   Var.DEFAULT_WINDOW_SIZE)
@@ -354,11 +362,11 @@ def main_menu() -> None:
           idx_selected = (idx_selected + 1) % len(options)
         elif event.key == pygame.K_RETURN:
           if options[idx_selected] == "Nuevo juego":
-            level_idx = level_select_menu(bg_img)
-            if level_idx is None:
+            current_level_idx = level_select_menu(bg_img)
+            if current_level_idx is None:
               selected_level = False
               continue
-            setup_level(level_idx)
+            setup_level(current_level_idx)
             selected_level = True
             menu_active = False
           elif options[idx_selected] == "Salir":
@@ -375,7 +383,7 @@ def close_game() -> None:
 
 def check_advance_level() -> None:
   """Checks if the hero crosses the open door and advances to the next level."""
-  global level, character, zombies
+  global level, character, zombies, current_level_idx
   door: Door = level.get_door()
   if door and door.get_state() == "open":
     hero_rect = pygame.Rect(character.get_x(), character.get_y(), 23, 30)
@@ -387,6 +395,7 @@ def check_advance_level() -> None:
         sound.play()
       next_level_idx = get_next_level_index()
       if next_level_idx is not None:
+        current_level_idx = next_level_idx
         setup_level(next_level_idx)
       else:
         # TODO: Pantalla de victoria
@@ -396,14 +405,10 @@ def check_advance_level() -> None:
 def get_next_level_index() -> int | None:
   """Returns the index of the next level, or None if finished."""
   # No es confiable, mejor buscar por config
-  current_idx = None
-  for idx, lvl in enumerate(Var.LEVELS_CONFIG):
-    if lvl["difficulty"] == level.get_difficulty() and lvl[
-      "type"] == level.get_level_type().value:
-      current_idx = idx
-      break
-  if current_idx is not None and current_idx + 1 < len(Var.LEVELS_CONFIG):
-    return current_idx + 1
+  global current_level_idx
+  if current_level_idx is not None and current_level_idx + 1 < len(
+      Var.LEVELS_CONFIG):
+    return current_level_idx + 1
   return None
 
 
@@ -431,7 +436,7 @@ def main_loop() -> None:
     move_zombies()
     update_all_sprites()
     level.check_open_door(zombies)
-    level.check_medkit_pickup(character)
+    level.check_medkit_pickup()
     check_advance_level()
     draw_game()
     clock.tick(60)

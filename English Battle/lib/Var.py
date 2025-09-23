@@ -177,6 +177,40 @@ class Var:
   }
 
   LEVELS_CONFIG: list[dict[str, Any]] = [
+    # Niveles tutoriales
+    {
+      "name": "Tutorial 1: Movimiento",
+      "tutorial": True,
+      "tutorial_step": "move",
+      "difficulty": 1,
+      "type": "multiple_choice",
+      "num_zombies": 0,
+      "background": "grass",
+      "wall_color": Color.WALL_COLOR_GRASS,
+      "message": "Usa las flechas de dirección para moverte. Llega hasta la puerta para avanzar."
+    },
+    {
+      "name": "Tutorial 2: Combate",
+      "tutorial": True,
+      "tutorial_step": "combat",
+      "difficulty": 1,
+      "type": "multiple_choice",
+      "num_zombies": 1,
+      "background": "grass",
+      "wall_color": Color.WALL_COLOR_GRASS,
+      "message": "Acércate al zombi para iniciar un combate. Responde correctamente para atacar."
+    },
+    {
+      "name": "Tutorial 3: Curación",
+      "tutorial": True,
+      "tutorial_step": "heal",
+      "difficulty": 1,
+      "type": "multiple_choice",
+      "num_zombies": 0,
+      "background": "grass",
+      "wall_color": Color.WALL_COLOR_GRASS,
+      "message": "Parece que nuestro héroe está herido. Recoge el botiquín para curarte. Acércate a él para usarlo."
+    },
     {
       "name": "Nivel 1.1 - Multiple Choice",
       "difficulty": 1,
