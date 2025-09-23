@@ -34,7 +34,7 @@ QUESTIONS = {
       ("Complete: I ___ not a teacher",
        ["not", "am", "are"],
        "am"),
-      ("Complete: We ___ a car", ["have", "ha", "haves"],
+      ("Complete: We ___ a car", ["have", "has", "haves"],
        "have"),
     ],
     "fill_in_the_blank": [
@@ -76,14 +76,14 @@ QUESTIONS = {
   # Intermedio
   3: {
     "word_ordering": [
-      (("It", "is", "raining"), "It is raining"),
-      (("We", "are", "going", "to", "the", "park"), "We are going to the park"),
-      (("She", "has", "a", "car"), "She has a car"),
-      (("They", "are", "friends"), "They are friends"),
+      (("It", "outside", "is", "raining"), "It is raining outside"),
+      (("We", "tomorrow", "are", "going", "to", "the", "park"), "We are going to the park tomorrow"),
+      (("She", "silver", "has", "a", "car"), "She has a silver car"),
+      (("They", "new", "my", "are", "friends"), "They are my new friends"),
     ],
     "multiple_choice": [
       ("Choose the correct sentence:",
-       ["It is raining", "It are raining", "It raining"], "It is raining"),
+       ["It is raining", "It are raining", "It am raining"], "It is raining"),
       ("Which is the correct question?",
        ["Are we going to the park?", "Is we going to the park?",
         "Are we go to the park?"], "Are we going to the park?"),
@@ -96,7 +96,7 @@ QUESTIONS = {
     ],
     "fill_in_the_blank": [
       ("It ___ raining. (to be)", "is"),
-      ("We ___ going to the park. (to be)", "to"),
+      ("We ___ going to the park. (to be)", "are"),
       ("She ___ a car. (have)", "has"),
       ("They ___ friends (to be)", "are"),
     ]
@@ -104,9 +104,9 @@ QUESTIONS = {
   # Intermedio alto
   4: {
     "word_ordering": [
-      (("I", "love", "music"), "I love music"),
-      (("The", "dog", "is", "barking"), "The dog is barking"),
-      (("He", "is", "reading", "a", "book"), "He is reading a book"),
+      (("I", "listening", "jazz", "love", "music"), "I love listening jazz music"),
+      (("The", "dog", "mailman", "the", "is", "barking"), "The dog is barking the mailman"),
+      (("He", "is", "reading", "history", "a", "book"), "He is reading a history book"),
       (("You", "have", "a", "nice", "house"), "You have a nice house"),
     ],
     "multiple_choice": [
@@ -132,14 +132,14 @@ QUESTIONS = {
   # Difícil
   5: {
     "word_ordering": [
-      (("We", "are", "happy"), "We are happy"),
-      (("The", "children", "are", "playing"), "The children are playing"),
-      (("She", "is", "my", "sister"), "She is my sister"),
-      (("It", "is", "a", "beautiful", "day"), "It is a beautiful day"),
+      (("left", "I", "dog", "the", "door", "open", "ran out", "and", "the"), "I left the door open and the dog ran out"),
+      (("The", "children", "are", "playing", "in", "the", "playground"), "The children are playing in the playground"),
+      (("She", "will", "be", "my", "half", "sister"), "She will be my half sister"),
+      (("We", "travelled", "to", "Brazil", "last", "year"), "We travelled to Brazil last year"),
     ],
     "multiple_choice": [
       ("Choose the correct sentence:",
-       ["We are happy", "We is happy", "We happy"], "We are happy"),
+       ["If I study hard, I'll pass the exam", "If I studied hard, I was pass the exam", "If I studied hard, I was passing the exam"], "If I study hard, I'll pass the exam"),
       ("Which is the correct question?",
        ["Are the children playing?", "Is the children playing?",
         "Are the children play?"], "Are the children playing?"),
