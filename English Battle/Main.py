@@ -41,7 +41,7 @@ combat_result_text = ""
 font = pygame.font.SysFont(FONT, 24)
 
 feedbackBox = FeedbackBox.get_instance()
-
+first_level: bool = True
 
 def handle_events() -> None:
   """Handles all pygame events."""
@@ -313,8 +313,8 @@ def level_select_menu(bg_img: Surface) -> Optional[int]:
 
 def setup_level(level_idx: int) -> None:
   """Initializes the level and characters according to selected config."""
-  global character, level, zombies
-  print("init")
+  global character, level, zombies, first_level
+  print("Initializing level:", LEVELS_CONFIG[level_idx]["name"])
   config = LEVELS_CONFIG[level_idx]
   character = Hero(50, 50, health=50)
   level = Level(window_size=DEFAULT_WINDOW_SIZE,
@@ -323,7 +323,9 @@ def setup_level(level_idx: int) -> None:
                 background_name=config["background"],
                 wall_color=config["wall_color"])
   zombies = level.generate_zombies(config["num_zombies"])
-  feedbackBox.set_message("Bienvenido!", 3, 2)
+  if first_level:
+    feedbackBox.set_message("Bienvenido!", 3, 2)
+    first_level = False
 
 
 def main_menu() -> None:
