@@ -58,6 +58,8 @@ class Level:
     self.__combat_modal: 'BaseCombatModal | None' = None
     self.__wall_color = wall_color
     self.__hero = hero
+    self.__pause_menu = None
+    self.__pause_menu_font = pygame.font.SysFont(Var.FONT, 28)
 
   def get_level_type(self) -> LevelType:
     """Returns the level type."""
@@ -338,6 +340,45 @@ class Level:
         if hero_rect.colliderect(medkit_rect):
           medkit.apply(self.__hero)
 
+  def get_pause_menu(self):
+    if self.__pause_menu is None:
+      self.__pause_menu = PauseMenu(self.__pause_menu_font,
+                                    pygame.Rect(120, 100, 400, 220))
+    return self.__pause_menu
+
+  def handle_pause_event(self, event: EventType) -> str | None:
+    """
+    Maneja eventos para el menú de pausa.
+    """
+    pause_menu = self.get_pause_menu()
+    if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+      if not pause_menu.get_active():
+        pause_menu.open()
+        pygame.mixer.find_channel().play(SOUNDS["ui_click"])
+        return "pause_opened"
+      else:
+        pause_menu.close()
+        pygame.mixer.find_channel().play(SOUNDS["ui_clickrelease"])
+        return "pause_closed"
+    result = pause_menu.handle_event(event)
+    if self.__pause_menu and self.__pause_menu.get_active() and event.type == pygame.KEYDOWN:
+      if not pause_menu.get_confirming() and event.key in [pygame.K_UP,
+                                                           pygame.K_w,
+                                                           pygame.K_DOWN,
+                                                           pygame.K_s]:
+        pygame.mixer.find_channel().play(SOUNDS["blip1"])
+      elif pause_menu.get_confirming() and event.key in [pygame.K_LEFT,
+                                                         pygame.K_a,
+                                                         pygame.K_RIGHT,
+                                                         pygame.K_d]:
+        pygame.mixer.find_channel().play(SOUNDS["blip1"])
+    return result
+
+  def draw_pause_menu(self, surface: Surface):
+    pause_menu = self.get_pause_menu()
+    if pause_menu.get_active():
+      pause_menu.draw(surface)
+
 
 class FeedbackBox:
   """Singleton class to show feedback messages on the screen with auto-hide."""
@@ -445,9 +486,106 @@ class FeedbackBox:
         surface.blit(box, (self.__margin, self.__margin))
         for i, line in enumerate(lines):
           txt = self.__font.render(line, True, Var.TEXT_COLOR)
-          surface.blit(txt, (self.__margin + 16, self.__margin + 9 + i * line_height))
+          surface.blit(txt, (self.__margin + 16,
+                             self.__margin + 9 + i * line_height))
         if elapsed > self.__duration:
           self._clear()
+
+
+class PauseMenu:
+  """Pause menu class"""
+
+  def __init__(self, font: FontType, rect: Rect) -> None:
+    self.__font = font
+    self.__rect = rect
+    self.__selected = 0
+    self.__confirming = False
+    self.__confirm_selected = 1
+    self.__active = False
+
+    self.__btn_rects = [
+      pygame.Rect(rect.x + 40, rect.y + 60, rect.width - 80, 40),
+      pygame.Rect(rect.x + 40, rect.y + 120, rect.width - 80, 40)
+    ]
+    self.__confirm_rects = [
+      pygame.Rect(rect.x + 60, rect.y + 120, 80, 40),
+      pygame.Rect(rect.x + rect.width - 140, rect.y + 120, 80, 40)
+    ]
+
+  def get_confirming(self) -> bool:
+    return self.__confirming
+
+  def get_active(self) -> bool:
+    return self.__active
+
+  def open(self):
+    self.__active = True
+    self.__selected = 0
+    self.__confirming = False
+
+  def close(self):
+    self.__active = False
+    self.__confirming = False
+
+  def draw(self, surface: Surface):
+    overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 120))
+    surface.blit(overlay, (0, 0))
+    pygame.draw.rect(surface, Color.MODAL_BG, self.__rect, border_radius=12)
+    pygame.draw.rect(surface, Color.WORD_BORDER, self.__rect, 2,
+                     border_radius=12)
+    title = self.__font.render("Menú de pausa", True, Color.TITLE_TEXT)
+    surface.blit(title, (self.__rect.x + 20, self.__rect.y + 18))
+
+    if not self.__confirming:
+      for i, txt in enumerate(["Continuar", "Volver al menú principal"]):
+        bg = Color.MENU_SELECTED_BTN if self.__selected == i else Color.MENU_UNSELECTED_BTN
+        pygame.draw.rect(surface, bg, self.__btn_rects[i], border_radius=8)
+        pygame.draw.rect(surface, Color.WORD_BORDER, self.__btn_rects[i], 2,
+                         border_radius=8)
+        txt_surf = self.__font.render(txt, True, Color.TITLE_TEXT)
+        txt_rect = txt_surf.get_rect(center=self.__btn_rects[i].center)
+        surface.blit(txt_surf, txt_rect)
+    else:
+      question = self.__font.render("¿Estás seguro?", True, Color.TITLE_TEXT)
+      surface.blit(question, (self.__rect.x + 20, self.__rect.y + 70))
+      for i, txt in enumerate(["Sí", "No"]):
+        bg = Color.MENU_SELECTED_BTN if self.__confirm_selected == i else Color.MENU_UNSELECTED_BTN
+        pygame.draw.rect(surface, bg, self.__confirm_rects[i], border_radius=8)
+        pygame.draw.rect(surface, Color.WORD_BORDER, self.__confirm_rects[i], 2,
+                         border_radius=8)
+        txt_surf = self.__font.render(txt, True, Color.TITLE_TEXT)
+        txt_rect = txt_surf.get_rect(center=self.__confirm_rects[i].center)
+        surface.blit(txt_surf, txt_rect)
+
+  def handle_event(self, event: EventType):
+    if not self.__active:
+      return None
+    if event.type == pygame.KEYDOWN:
+      if not self.__confirming:
+        if event.key in [pygame.K_UP]:
+          self.__selected = (self.__selected - 1) % 2
+        elif event.key in [pygame.K_DOWN]:
+          self.__selected = (self.__selected + 1) % 2
+        elif event.key in [pygame.K_RETURN]:
+          if self.__selected == 0:
+            self.close()
+            return "continue"
+          elif self.__selected == 1:
+            self.__confirming = True
+            self.__confirm_selected = 1
+      else:
+        if event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
+          self.__confirm_selected = 1 if self.__confirm_selected == 0 else 0
+          print("confirm selected set to", self.__confirm_selected)
+        elif event.key in [pygame.K_RETURN]:
+          print("confirm selected is", self.__confirm_selected)
+          if self.__confirm_selected == 0:
+            self.close()
+            return "main_menu"
+          else:
+            self.__confirming = False
+    return None
 
 
 class TutorialLevel(Level):

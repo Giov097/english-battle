@@ -53,6 +53,16 @@ def handle_events() -> None:
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
       repeat = False
+    pause_result = level.handle_pause_event(event)
+    if level.get_pause_menu():
+      if pause_result == "main_menu":
+        main_menu()
+        return
+      elif pause_result == "continue" or pause_result == "pause_closed":
+        return
+      else:
+        return
+
     level.handle_combat_event(event, font)
     combat = level.get_combat_instance()
     if combat is not None and combat.get_active():
@@ -83,31 +93,32 @@ def handle_combat_input(event) -> None:
 def move_character() -> None:
   """Moves the hero based on key presses."""
   global character, zombies, combat_instance
-  keys = pygame.key.get_pressed()
-  moving = False
-  dx, dy = 0, 0
-  if keys[pygame.K_LEFT] and not keys[pygame.K_RIGHT]:
-    dx = -1
-    moving = True
-  if keys[pygame.K_RIGHT] and not keys[pygame.K_LEFT]:
-    dx = 1
-    moving = True
-  if keys[pygame.K_UP] and not keys[pygame.K_DOWN]:
-    dy = -1
-    moving = True
-  if keys[pygame.K_DOWN] and not keys[pygame.K_UP]:
-    dy = 1
-    moving = True
+  if not level.get_pause_menu().get_active():
+    keys = pygame.key.get_pressed()
+    moving = False
+    dx, dy = 0, 0
+    if keys[pygame.K_LEFT] and not keys[pygame.K_RIGHT]:
+      dx = -1
+      moving = True
+    if keys[pygame.K_RIGHT] and not keys[pygame.K_LEFT]:
+      dx = 1
+      moving = True
+    if keys[pygame.K_UP] and not keys[pygame.K_DOWN]:
+      dy = -1
+      moving = True
+    if keys[pygame.K_DOWN] and not keys[pygame.K_UP]:
+      dy = 1
+      moving = True
 
-  combat_instance = level.get_combat_instance()
-  if combat_instance is None or not combat_instance.get_active():
-    character.move(dx, dy, moving, Var.DEFAULT_WINDOW_SIZE[0],
-                   Var.DEFAULT_WINDOW_SIZE[1],
-                   level=level, other_characters=zombies)
-  # Si hay combate, nadie se mueve (ni héroe ni zombies)
-  else:
-    # Bloquea movimiento del héroe y zombies durante combate
-    pass
+    combat_instance = level.get_combat_instance()
+    if combat_instance is None or not combat_instance.get_active():
+      character.move(dx, dy, moving, Var.DEFAULT_WINDOW_SIZE[0],
+                     Var.DEFAULT_WINDOW_SIZE[1],
+                     level=level, other_characters=zombies)
+    # Si hay combate, nadie se mueve (ni héroe ni zombies)
+    else:
+      # Bloquea movimiento del héroe y zombies durante combate
+      pass
 
 
 def handle_combat_trigger() -> None:
@@ -173,23 +184,24 @@ def _find_closest_zombie() -> Optional[Zombie]:
 def move_zombies() -> None:
   """Moves the zombies randomly at set intervals."""
   global zombie_move_counter, zombies, character, combat_instance
-  zombie_move_counter += 1
-  if zombie_move_counter >= ZOMBIE_MOVE_INTERVAL:
-    combat_instance = level.get_combat_instance()
-    if combat_instance is None or not combat_instance.get_active():
-      for zombie in zombies:
-        if not zombie.is_alive():
-          continue
-        zdx, zdy = 0, 0
-        direction = random.choice(
-            [(15, 0), (-15, 0), (0, 15), (0, -15), (0, 0)])
-        zdx, zdy = direction
-        if zdx != 0 or zdy != 0:
-          other_chars = [character] + [z for z in zombies if z is not zombie]
-          zombie.move(zdx, zdy, True, Var.DEFAULT_WINDOW_SIZE[0],
-                      Var.DEFAULT_WINDOW_SIZE[1], level=level,
-                      other_characters=other_chars)
-    zombie_move_counter = 0
+  if not level.get_pause_menu().get_active():
+    zombie_move_counter += 1
+    if zombie_move_counter >= ZOMBIE_MOVE_INTERVAL:
+      combat_instance = level.get_combat_instance()
+      if combat_instance is None or not combat_instance.get_active():
+        for zombie in zombies:
+          if not zombie.is_alive():
+            continue
+          zdx, zdy = 0, 0
+          direction = random.choice(
+              [(15, 0), (-15, 0), (0, 15), (0, -15), (0, 0)])
+          zdx, zdy = direction
+          if zdx != 0 or zdy != 0:
+            other_chars = [character] + [z for z in zombies if z is not zombie]
+            zombie.move(zdx, zdy, True, Var.DEFAULT_WINDOW_SIZE[0],
+                        Var.DEFAULT_WINDOW_SIZE[1], level=level,
+                        other_characters=other_chars)
+      zombie_move_counter = 0
 
 
 def draw_game() -> None:
@@ -210,6 +222,7 @@ def draw_game() -> None:
   if combat is not None and combat.get_active() and combat_modal:
     combat_modal.draw(window)
   feedbackBox.draw(window)
+  level.draw_pause_menu(window)
   pygame.display.flip()
 
 
@@ -336,7 +349,8 @@ def setup_level(level_idx: int) -> None:
                   hero=character)
   zombies = level.generate_zombies(config["num_zombies"])
   if not ("tutorial" in config and config["tutorial"]) and first_level:
-    feedbackBox.set_message("¡Bienvenido! Derrota a todos los zombis para avanzar", 3, 2)
+    feedbackBox.set_message(
+        "¡Bienvenido! Derrota a todos los zombis para avanzar", 3, 2)
     first_level = False
 
 
