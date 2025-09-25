@@ -363,14 +363,10 @@ class Level:
     result = pause_menu.handle_event(event)
     if self.__pause_menu and self.__pause_menu.get_active() and event.type == pygame.KEYDOWN:
       if not pause_menu.get_confirming() and event.key in [pygame.K_UP,
-                                                           pygame.K_w,
-                                                           pygame.K_DOWN,
-                                                           pygame.K_s]:
+                                                           pygame.K_DOWN]:
         pygame.mixer.find_channel().play(SOUNDS["blip1"])
       elif pause_menu.get_confirming() and event.key in [pygame.K_LEFT,
-                                                         pygame.K_a,
-                                                         pygame.K_RIGHT,
-                                                         pygame.K_d]:
+                                                         pygame.K_RIGHT]:
         pygame.mixer.find_channel().play(SOUNDS["blip1"])
     return result
 

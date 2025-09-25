@@ -54,15 +54,8 @@ def handle_events() -> None:
     if event.type == pygame.QUIT:
       repeat = False
     pause_result = level.handle_pause_event(event)
-    if level.get_pause_menu():
-      if pause_result == "main_menu":
-        main_menu()
-        return
-      elif pause_result == "continue" or pause_result == "pause_closed":
-        return
-      else:
-        return
-
+    if level.get_pause_menu() and pause_result == "main_menu":
+      main_menu()
     level.handle_combat_event(event, font)
     combat = level.get_combat_instance()
     if combat is not None and combat.get_active():
