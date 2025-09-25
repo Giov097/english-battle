@@ -323,7 +323,7 @@ def setup_level(level_idx: int) -> None:
   global character, level, zombies, first_level
   print("Initializing level:", Var.LEVELS_CONFIG[level_idx]["name"])
   config = Var.LEVELS_CONFIG[level_idx]
-  character = Hero(50, 50, health=50)
+  character = Hero(50, 100, health=50)
   if config.get("tutorial"):
     level = Functions.create_level_from_config(config,
                                                hero=character)
@@ -336,7 +336,7 @@ def setup_level(level_idx: int) -> None:
                   hero=character)
   zombies = level.generate_zombies(config["num_zombies"])
   if not ("tutorial" in config and config["tutorial"]) and first_level:
-    feedbackBox.set_message("Bienvenido!", 3, 2)
+    feedbackBox.set_message("¡Bienvenido! Derrota a todos los zombis para avanzar", 3, 2)
     first_level = False
 
 
