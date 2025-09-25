@@ -403,6 +403,26 @@ class FeedbackBox:
     self.__message = ""
     self.__start_time = None
 
+  def _wrap_text(self, text: str) -> list[str]:
+    """
+    Divides the text into lines that fit within the box width.
+    """
+    words = text.split(' ')
+    lines = []
+    current_line = ""
+    for word in words:
+      test_line = current_line + (" " if current_line else "") + word
+      test_surface = self.__font.render(test_line, True, Var.TEXT_COLOR)
+      if test_surface.get_width() <= self.__width - 32:
+        current_line = test_line
+      else:
+        if current_line:
+          lines.append(current_line)
+        current_line = word
+    if current_line:
+      lines.append(current_line)
+    return lines
+
   def draw(self, surface: pygame.Surface) -> None:
     """
     Draws the feedback box on the given surface if time not expired and delay passed.
@@ -417,11 +437,15 @@ class FeedbackBox:
           pygame.mixer.find_channel().play(SOUNDS["ui_rollover"])
       if self.__start_time is not None:
         elapsed = time.time() - self.__start_time
-        box = pygame.Surface((self.__width, self.__height), pygame.SRCALPHA)
+        lines = self._wrap_text(self.__message)
+        line_height = self.__font.get_height()
+        box_height = max(self.__height, line_height * len(lines) + 18)
+        box = pygame.Surface((self.__width, box_height), pygame.SRCALPHA)
         box.fill(Color.FEEDBACK_BG)
         surface.blit(box, (self.__margin, self.__margin))
-        txt = self.__font.render(self.__message, True, Var.TEXT_COLOR)
-        surface.blit(txt, (self.__margin + 16, self.__margin + 9))
+        for i, line in enumerate(lines):
+          txt = self.__font.render(line, True, Var.TEXT_COLOR)
+          surface.blit(txt, (self.__margin + 16, self.__margin + 9 + i * line_height))
         if elapsed > self.__duration:
           self._clear()
 
@@ -446,7 +470,7 @@ class TutorialLevel(Level):
   def _show_message(self) -> None:
     msg = self.__tutorial_config.get("message")
     if msg:
-      FeedbackBox.get_instance().set_message(msg, 8, 0.5)
+      FeedbackBox.get_instance().set_message(msg, 8, 1.5)
 
   def _generate_random_maze(self, window_size: tuple[int, int],
       wall_thickness: int = Var.DEFAULT_WALL_THICKNESS,

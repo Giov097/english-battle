@@ -14,8 +14,10 @@ from Sprite.Backgrounds import BACKGROUNDS
 from lib import Functions
 from lib.Color import Color
 from lib.Core import Hero, Zombie
-from lib.Level import Level, Combat, LevelType, Door, FeedbackBox, TutorialLevel
+from lib.Level import Level, LevelType, FeedbackBox
 from lib.Var import Var
+from lib.Combat import Combat
+from lib.Objects import Door
 
 pygame.init()
 
