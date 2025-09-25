@@ -3,13 +3,15 @@ Module to manage combat encounters with grammar questions in a Pygame applicatio
 """
 import random
 from abc import ABC, abstractmethod
+from typing import Optional
 
 import pygame
 from pygame import Rect, Surface, MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION
 from pygame.event import EventType
-from pygame.font import FontType
+from pygame.font import FontType, Font
 
 from lib.Color import Color
+
 
 class Combat:
   """Class to manage combat encounters with grammar questions."""
@@ -28,9 +30,13 @@ class Combat:
     self.__last_question: str | None = None
     self.__questions_set = questions_set if questions_set is not None else []
 
-  def generate_question(self) -> str | tuple[str, list[str], str] | None:
+  def generate_question(self) -> tuple[str | None, list[
+    dict[str, list[str]]] | None, str | None] | str | None:
     """Generates a new grammar question (word ordering or multiple choice)."""
     questions = self.__questions_set
+    question: Optional[str] = None
+    answer: Optional[str] = None
+    options: Optional[list[dict[str, list[str]]]] = None
     if not questions:
       self.__current_question = None
       self.__current_answer = None
@@ -232,7 +238,7 @@ class BaseCombatModal(ABC):
 class WordOrderingModal(BaseCombatModal):
   """Modal for word ordering questions with drag-and-drop."""
 
-  def __init__(self, question_words, font: FontType, rect: Rect,
+  def __init__(self, question_words: list[str], font: FontType, rect: Rect,
       result_text: str = "") -> None:
     """
     Initializes the word ordering modal.
@@ -244,29 +250,65 @@ class WordOrderingModal(BaseCombatModal):
     self.__answer_words = []
     self.__dragging = None
     self.__word_rects = {"shuffled": [], "answer": []}
+    self.__base_font = font
+    self.__font_path = font.path if hasattr(font, "path") else None
+    self.__shuffled_font = font
+    self.__answer_font = font
     self.__update_word_rects()
+
+  def __get_fit_font_and_layout(self, words: list[str], area_width: int,
+      base_font: Font) -> tuple[FontType, int, int]:
+    """
+    Adjusts font size and layout to fit words within the given area width.
+    """
+    font_size = base_font.get_height()
+    margin = 10
+    word_w = 90
+    max_per_row = max(1, area_width // (word_w + margin))
+    while len(words) > max_per_row and font_size > 16:
+      font_size = int(font_size * 0.9)
+      word_w = int(word_w * 0.9)
+      max_per_row = max(1, area_width // (word_w + margin))
+    font = pygame.font.Font(self.__font_path, font_size)
+    return font, word_w, max_per_row
 
   def __update_word_rects(self) -> None:
     """
     Updates the rectangles for the words in both areas.
     """
     margin = 10
-    word_w, word_h = 90, 32
     title_height = 35
+    area_width = self.get_rect().width - 2 * margin
+
+    font_obj, word_w, max_per_row = self.__get_fit_font_and_layout(
+        self.__shuffled_words, area_width, self.__base_font)
+    word_h = font_obj.get_height() + 10
+    self.__shuffled_font = font_obj
     self.__word_rects["shuffled"] = []
-    for i, word in enumerate(self.__shuffled_words):
-      x = self.get_rect().x + margin + i * (word_w + margin)
-      y = self.get_rect().y + margin + title_height
+    for idx, word in enumerate(self.__shuffled_words):
+      row = idx // max_per_row
+      col = idx % max_per_row
+      x = self.get_rect().x + margin + col * (word_w + margin)
+      y = self.get_rect().y + margin + title_height + row * (word_h + margin)
       self.__word_rects["shuffled"].append(pygame.Rect(x, y, word_w, word_h))
+
+    font_obj_ans, word_w_ans, max_per_row_ans = self.__get_fit_font_and_layout(
+        self.__answer_words, area_width, self.__base_font)
+    word_h_ans = font_obj_ans.get_height() + 10
+    self.__answer_font = font_obj_ans
     self.__word_rects["answer"] = []
-    for i, word in enumerate(self.__answer_words):
-      x = self.get_rect().x + margin + i * (word_w + margin)
-      y = self.get_rect().y + self.get_rect().height // 2
-      self.__word_rects["answer"].append(pygame.Rect(x, y, word_w, word_h))
+    for idx, word in enumerate(self.__answer_words):
+      row = idx // max_per_row_ans
+      col = idx % max_per_row_ans
+      x = self.get_rect().x + margin + col * (word_w_ans + margin)
+      y = self.get_rect().y + self.get_rect().height // 2 + row * (
+          word_h_ans + margin)
+      self.__word_rects["answer"].append(
+          pygame.Rect(x, y, word_w_ans, word_h_ans))
 
   def draw(self, surface: Surface) -> None:
     """
-    Draws the modal with words and buttons.
+    Draws the modal with words and buttons, ajustando desbordamiento.
     """
     pygame.draw.rect(surface, Color.MODAL_BG, self.get_rect())
     title = self.get_font().render("Ordena las palabras:", True,
@@ -277,24 +319,24 @@ class WordOrderingModal(BaseCombatModal):
       if word in self.__answer_words:
         pygame.draw.rect(surface, Color.WORD_BG_DISABLED, rect)
         pygame.draw.rect(surface, Color.WORD_BORDER, rect, 2)
-        txt = self.get_font().render(word, True, Color.WORD_TEXT_DISABLED)
+        txt = self.__shuffled_font.render(word, True, Color.WORD_TEXT_DISABLED)
       else:
         pygame.draw.rect(surface, Color.WORD_BG, rect)
         pygame.draw.rect(surface, Color.WORD_BORDER, rect, 2)
-        txt = self.get_font().render(word, True, Color.TITLE_TEXT)
+        txt = self.__shuffled_font.render(word, True, Color.TITLE_TEXT)
       surface.blit(txt, (rect.x + 6, rect.y + 4))
     answer_area_rect = pygame.Rect(
         self.get_rect().x + 5,
         self.get_rect().y + self.get_rect().height // 2 - 8,
         self.get_rect().width - 10,
-        48
+        48 + (len(self.__answer_words) // max(1, (
+            self.get_rect().width // (90 + 10))) * 42)
     )
     pygame.draw.rect(surface, Color.ANSWER_AREA_BG, answer_area_rect)
     pygame.draw.rect(surface, Color.ANSWER_AREA_BORDER, answer_area_rect, 2)
     if not self.__answer_words:
       hint_txt = self.get_font().render("Arrastra aquí para formar la oración",
-                                        True,
-                                        Color.ANSWER_AREA_BORDER)
+                                        True, Color.ANSWER_AREA_BORDER)
       hint_rect = hint_txt.get_rect(
           center=(answer_area_rect.centerx, answer_area_rect.y + 24))
       surface.blit(hint_txt, hint_rect)
@@ -302,7 +344,7 @@ class WordOrderingModal(BaseCombatModal):
       rect: Rect = self.__word_rects["answer"][i]
       pygame.draw.rect(surface, Color.ANSWER_WORD_BG, rect)
       pygame.draw.rect(surface, Color.WORD_BORDER, rect, 2)
-      txt = self.get_font().render(word, True, Color.TITLE_TEXT)
+      txt = self.__answer_font.render(word, True, Color.TITLE_TEXT)
       surface.blit(txt, (rect.x + 6, rect.y + 4))
     if self.__dragging:
       word, _, _ = self.__dragging
@@ -312,13 +354,6 @@ class WordOrderingModal(BaseCombatModal):
       txt = self.get_font().render(word, True, Color.TITLE_TEXT)
       surface.blit(txt, (drag_rect.x + 6, drag_rect.y + 4))
     self._draw_buttons(surface)
-    #if self.get_result_text():
-      # result_color = Color.CORRECT_ANSWER_BG if "Correcto" in self.get_result_text() else Color.WRONG_ANSWER_BG
-      # result_surface = self.get_font().render(self.get_result_text(), True,
-      #                                         result_color)
-      # result_x = self.get_rect().x + 10
-      # result_y = self.get_confirm_button().bottom + 10
-      # surface.blit(result_surface, (result_x, result_y))
 
   def handle_event(self, event: EventType) -> None:
     """
