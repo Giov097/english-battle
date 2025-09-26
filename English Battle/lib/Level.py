@@ -38,6 +38,7 @@ class Level:
       wall_color: tuple[int, int, int] = Color.WALL_COLOR_DEFAULT) -> None:
     """
     Initializes the Level with maze, background, and questions.
+
     """
     self.__death_handled: None = None
     self.__window_size: tuple[int, int] = window_size
@@ -281,7 +282,7 @@ class Level:
   def handle_combat_event(self, event: EventType, font: FontType) -> None:
     """Handles events for combat and the modal."""
     if self.__combat_instance is not None and self.__combat_instance.get_active() and self.__combat_modal:
-      self.__combat_modal.handle_event(event)
+      self.__combat_modal.handle_combat_event(event)
       if self.__combat_modal.get_confirmed():
         player_answer = self.__combat_modal.get_player_answer()
         if player_answer:
