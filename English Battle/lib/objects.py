@@ -3,6 +3,7 @@ import random
 
 import pygame
 
+from lib.var import Var
 from sound import SOUNDS
 
 
@@ -52,9 +53,9 @@ class Door:
     """
     if self.__state == "closed":
       if self.__open_sounds:
-        channel = pygame.mixer.find_channel()
+        channel = Var.SFX_CHANNEL
         if channel:
-          random.choice(self.__open_sounds).play()
+          channel.play(random.choice(self.__open_sounds))
       self.__state = "opening"
       self.__opening_frame = 0
 

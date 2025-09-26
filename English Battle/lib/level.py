@@ -281,7 +281,7 @@ class Level:
     """
     Plays beep sound twice and then flatline, each after the previous finishes.
     """
-    channel: Channel = pygame.mixer.find_channel()
+    channel: Channel = Var.SFX_CHANNEL
     if channel is None:
       return
     channel.set_endevent(pygame.USEREVENT + 1)
@@ -456,20 +456,20 @@ class Level:
     if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
       if not pause_menu.get_active():
         pause_menu.open()
-        pygame.mixer.find_channel().play(SOUNDS["ui_click"])
+        Var.SFX_CHANNEL.play(SOUNDS["ui_click"])
         return "pause_opened"
       else:
         pause_menu.close()
-        pygame.mixer.find_channel().play(SOUNDS["ui_clickrelease"])
+        Var.SFX_CHANNEL.play(SOUNDS["ui_clickrelease"])
         return "pause_closed"
     result = pause_menu.handle_event(event)
     if self.__pause_menu and self.__pause_menu.get_active() and event.type == pygame.KEYDOWN:
       if not pause_menu.get_confirming() and event.key in [pygame.K_UP,
                                                            pygame.K_DOWN]:
-        pygame.mixer.find_channel().play(SOUNDS["blip1"])
+        Var.SFX_CHANNEL.play(SOUNDS["blip1"])
       elif pause_menu.get_confirming() and event.key in [pygame.K_LEFT,
                                                          pygame.K_RIGHT]:
-        pygame.mixer.find_channel().play(SOUNDS["blip1"])
+        Var.SFX_CHANNEL.play(SOUNDS["blip1"])
     return result
 
   def draw_pause_menu(self, surface: Surface) -> None:
@@ -594,7 +594,7 @@ class FeedbackBox:
           self.__start_time = time.time()
           self.__delay = 0
           self.__delay_start_time = None
-          pygame.mixer.find_channel().play(SOUNDS["ui_rollover"])
+          Var.SFX_CHANNEL.play(SOUNDS["ui_rollover"])
       if self.__start_time is not None:
         elapsed = time.time() - self.__start_time
         lines = self._wrap_text(self.__message)

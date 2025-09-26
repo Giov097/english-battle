@@ -1,7 +1,10 @@
 """Global variables"""
 from typing import Any
 
+import pygame
+
 from lib.color import Color
+from sound import SOUNDS
 
 
 class Var:
@@ -493,3 +496,8 @@ class Var:
       "wall_color": Color.WALL_COLOR_SNOW
     }
   ]
+
+  MUSIC_CHANNEL = pygame.mixer.music
+  SFX_CHANNEL = pygame.mixer.Channel(7)
+
+  # GAME_MUSIC = pygame.mixer.music.load("sound/game-8-bit.mp3")

@@ -10,7 +10,15 @@ SOUND_DIR = os.path.dirname(__file__)
 
 SOUNDS: dict[str, SoundType] = {}
 
-for filename in os.listdir(SOUND_DIR):
+MUSIC: dict[str, str] = {}
+
+for filename in os.listdir(os.path.join(SOUND_DIR, 'sfx')):
   if filename.lower().endswith(('.wav', '.ogg', '.mp3')):
     sound_name = os.path.splitext(filename)[0]
-    SOUNDS[sound_name] = pygame.mixer.Sound(os.path.join(SOUND_DIR, filename))
+    SOUNDS[sound_name] = pygame.mixer.Sound(
+      os.path.join(SOUND_DIR, 'sfx', filename))
+
+for filename in os.listdir(os.path.join(SOUND_DIR, 'music')):
+  if filename.lower().endswith(('.mp3', '.ogg', '.wav')):
+    music_name = os.path.splitext(filename)[0]
+    MUSIC[music_name] = os.path.join(SOUND_DIR, 'music', filename)

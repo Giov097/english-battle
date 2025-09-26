@@ -10,15 +10,16 @@ from pygame.mixer import Channel
 from pygame.time import Clock
 
 from font import FONTS
-from sound import SOUNDS
-from sprite.backgrounds import BACKGROUNDS
-from lib import functions
+from lib import var
 from lib.color import Color
-from lib.core import Hero, Zombie
-from lib.level import Level, LevelType, FeedbackBox
-from lib.var import Var
 from lib.combat import Combat
+from lib.core import Hero, Zombie
+from lib.functions import create_level_from_config
+from lib.level import Level, LevelType, FeedbackBox
 from lib.objects import Door
+from lib.var import Var
+from sound import SOUNDS, MUSIC
+from sprite.backgrounds import BACKGROUNDS
 
 pygame.init()
 
@@ -316,7 +317,7 @@ def level_select_menu(bg_img: Surface) -> Optional[int]:
   levels.append("Volver")
   selected = 0
   level_selected = False
-  channel: Channel = pygame.mixer.find_channel()
+  channel: Channel = Var.SFX_CHANNEL
   while not level_selected:
     draw_level_select(window, bg_img, selected, levels)
     for event in pygame.event.get():
@@ -342,8 +343,8 @@ def setup_level(level_idx: int) -> None:
   config = Var.LEVELS_CONFIG[level_idx]
   character = Hero(50, 100, health=50)
   if config.get("tutorial"):
-    level = Functions.create_level_from_config(config,
-                                               hero=character)
+    level = create_level_from_config(config,
+                                     hero=character)
   else:
     level = Level(window_size=Var.DEFAULT_WINDOW_SIZE,
                   difficulty=config["difficulty"],
@@ -367,7 +368,7 @@ def main_menu() -> None:
                                   Var.DEFAULT_WINDOW_SIZE)
   options = ["Nuevo juego", "Salir"]
   idx_selected = 0
-  channel: Channel = pygame.mixer.find_channel()
+  channel: Channel = Var.SFX_CHANNEL
   menu_active = True
   selected_level = False
   while menu_active:
@@ -443,13 +444,14 @@ def transition_black_screen(duration: float = 1.0) -> None:
 def main_loop() -> None:
   """Main game loop."""
   global repeat
+  pygame.mixer.music.load(MUSIC.get("game-8-bit"))
+  pygame.mixer.music.play()
   main_menu()
   while repeat:
     if not character.is_alive():
       level.play_death_sounds()
       transition_black_screen(3)
       main_menu()
-      repeat = False
     handle_events()
     move_character()
     handle_combat_trigger()
