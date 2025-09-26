@@ -573,6 +573,7 @@ class MultipleChoiceModal(BaseCombatModal):
     option_w = self.get_rect().width - 2 * margin
     start_y = self.get_rect().y + 50
     self.__option_rects = []
+    random.shuffle(self.__options)
     for i, _ in enumerate(self.__options):
       y = start_y + i * (option_h + margin)
       self.__option_rects.append(
