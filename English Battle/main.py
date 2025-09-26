@@ -9,16 +9,16 @@ from pygame.font import FontType
 from pygame.mixer import Channel
 from pygame.time import Clock
 
-from Font import FONTS
-from Sound import SOUNDS
-from Sprite.Backgrounds import BACKGROUNDS
-from lib import Functions
-from lib.Color import Color
-from lib.Core import Hero, Zombie
-from lib.Level import Level, LevelType, FeedbackBox
-from lib.Var import Var
-from lib.Combat import Combat
-from lib.Objects import Door
+from font import FONTS
+from sound import SOUNDS
+from sprite.backgrounds import BACKGROUNDS
+from lib import functions
+from lib.color import Color
+from lib.core import Hero, Zombie
+from lib.level import Level, LevelType, FeedbackBox
+from lib.var import Var
+from lib.combat import Combat
+from lib.objects import Door
 
 pygame.init()
 
@@ -234,8 +234,8 @@ def draw_menu(menu_window: Surface, menu_font: FontType, title_font: FontType,
   """
   Draws main menu.
   :param menu_window: The pygame window surface.
-  :param title_font: Font for the title.
-  :param menu_font: Font for the menu options.
+  :param title_font: font for the title.
+  :param menu_font: font for the menu options.
   :param background_img: Background image for the menu.
   :param selected_idx: Index of the currently selected option.
   :param options: List of menu option strings.

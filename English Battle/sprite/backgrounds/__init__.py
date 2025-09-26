@@ -5,7 +5,7 @@ BACKGROUND_DIR = os.path.dirname(__file__)
 
 BACKGROUNDS = {
   "beach": pygame.image.load(os.path.join(BACKGROUND_DIR, "beach.png")),
-  "brick_dust": pygame.image.load(os.path.join(BACKGROUND_DIR, "brick-dust.png")),
+  "brick-dust": pygame.image.load(os.path.join(BACKGROUND_DIR, "brick-dust.png")),
   "cave": pygame.image.load(os.path.join(BACKGROUND_DIR, "cave.png")),
   "concrete": pygame.image.load(os.path.join(BACKGROUND_DIR, "concrete.png")),
   "dirt": pygame.image.load(os.path.join(BACKGROUND_DIR, "dirt.png")),

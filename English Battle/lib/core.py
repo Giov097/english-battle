@@ -7,10 +7,10 @@ import pygame
 from pygame import Surface
 from pygame.mixer import SoundType
 
-from Sound import SOUNDS
-from lib.Color import Color
-from lib.Level import Level
-from lib.Var import Var
+from sound import SOUNDS
+from lib.color import Color
+from lib.level import Level
+from lib.var import Var
 
 
 class Character(ABC):
@@ -458,11 +458,11 @@ class Hero(Character):
     :param y: initial y position
     :param health: initial and maximum health
     """
-    from Sprite.Characters import HERO_SPRITES
-    from Sound import SOUNDS
+    from sprite.characters import HERO_SPRITES
+    from sound import SOUNDS
 
     super().__init__(
-        "Hero", health, 10, HERO_SPRITES["base"], x, y, HERO_SPRITES,
+        "hero", health, 10, HERO_SPRITES["base"], x, y, HERO_SPRITES,
         speed=2, attack_range=30, attack_cooldown=20,
         attack_hit_sounds=[
           SOUNDS.get("cbar_hitbod2")
@@ -485,10 +485,10 @@ class Hero(Character):
     ])
     self.set_step_channel(pygame.mixer.Channel(5))
 
-  def apply_medkit(self, medkit: 'Medkit') -> None:
+  def apply_medkit(self, medkit: 'medkit') -> None:
     """
     Applies a medkit to heal the hero.
-    :param medkit: Medkit object to use
+    :param medkit: medkit object to use
     """
     if not medkit.get_used() and self.get_health() < self.get_max_health():
       heal_amount = medkit.get_heal_amount()
@@ -506,8 +506,8 @@ class Zombie(Character):
     :param y: initial y position
     :param health: initial and maximum health
     """
-    from Sprite.Enemies import ZOMBIE_SPRITES
-    super().__init__("Zombie", health, 10, ZOMBIE_SPRITES["base"], x, y,
+    from sprite.enemies import ZOMBIE_SPRITES
+    super().__init__("zombie", health, 10, ZOMBIE_SPRITES["base"], x, y,
                      ZOMBIE_SPRITES, speed=1, attack_range=30,
                      attack_cooldown=60,
                      attack_hit_sounds=[

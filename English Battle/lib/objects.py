@@ -3,7 +3,7 @@ import random
 
 import pygame
 
-from Sound import SOUNDS
+from sound import SOUNDS
 
 
 class Door:
@@ -12,7 +12,7 @@ class Door:
   def __init__(self, x: int, y: int,
       sprite_dict: dict[str, 'Surface']) -> None:
     """
-    Initializes the Door object.
+    Initializes the door object.
     :param x: The x-coordinate of the door.
     :param y: The y-coordinate of the door.
     :param sprite_dict: A dictionary of sprites for different door states.
@@ -90,7 +90,7 @@ class Medkit:
   def __init__(self, x: int, y: int,
       sprite_dict: dict[str, 'Surface']) -> None:
     """
-    Initializes the Medkit object.
+    Initializes the medkit object.
     :param x: The x-coordinate of the medkit.
     :param y: The y-coordinate of the medkit.
     :param sprite_dict: A dictionary of sprites for the medkit.

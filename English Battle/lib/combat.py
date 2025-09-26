@@ -6,17 +6,17 @@ from abc import ABC, abstractmethod
 from typing import Optional, Any
 
 import pygame
-from pygame import Rect, Surface, MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION
+from pygame import Rect, Surface, MOUSEBUTTONDOWN, MOUSEBUTTONUP
 from pygame.event import EventType
 from pygame.font import FontType, Font
 
-from lib.Color import Color
+from lib.color import Color
 
 
 class Combat:
   """Class to manage combat encounters with grammar questions."""
 
-  def __init__(self, hero: 'Hero', enemy: 'Character', current_type: str,
+  def __init__(self, hero: 'hero', enemy: 'Character', current_type: str,
       questions_set: list[dict[str, list[str]]]) -> None:
     """
     Initializes the Combat instance.
@@ -25,7 +25,7 @@ class Combat:
     :param current_type: The type of combat (e.g., "word_ordering", "multiple_choice", "fill_in_the_blank").
     :param questions_set: List of questions for the combat.
     """
-    self.__hero: 'Hero' = hero
+    self.__hero: 'hero' = hero
     self.__enemy: 'Character' = enemy
     self.__combat_type: str = current_type
     self.__active: bool = True

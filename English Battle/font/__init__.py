@@ -1,5 +1,5 @@
 """
-Font resources for the game.
+font resources for the game.
 """
 import os
 

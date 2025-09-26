@@ -1,7 +1,7 @@
 """Global variables"""
 from typing import Any
 
-from lib.Color import Color
+from lib.color import Color
 
 
 class Var:

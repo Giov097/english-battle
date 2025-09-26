@@ -1,8 +1,8 @@
 """Functions"""
-from lib.Color import Color
-from lib.Level import (Level, TutorialLevel, TutorialCombatLevel,
+from lib.color import Color
+from lib.level import (Level, TutorialLevel, TutorialCombatLevel,
                        TutorialMoveLevel, TutorialHealLevel, LevelType)
-from lib.Var import Var
+from lib.var import Var
 
 
 def create_level_from_config(config: dict, hero: 'Hero') -> Level:

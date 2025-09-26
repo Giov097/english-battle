@@ -9,15 +9,15 @@ from pygame.event import EventType
 from pygame.font import FontType
 from pygame.mixer import Channel
 
-from Font import FONTS
-from Sound import SOUNDS
-from Sprite.Backgrounds import BACKGROUNDS
-from Sprite.Levels import DOOR_1_SPRITES, MEDKIT_SPRITES
-from lib.Color import Color
-from lib.Combat import Combat, WordOrderingModal, MultipleChoiceModal, \
+from font import FONTS
+from sound import SOUNDS
+from sprite.backgrounds import BACKGROUNDS
+from sprite.levels import DOOR_1_SPRITES, MEDKIT_SPRITES
+from lib.color import Color
+from lib.combat import Combat, WordOrderingModal, MultipleChoiceModal, \
   FillGapsModal
-from lib.Objects import Door, Medkit
-from lib.Var import Var
+from lib.objects import Door, Medkit
+from lib.var import Var
 
 
 class LevelType(Enum):
@@ -34,7 +34,7 @@ class Level:
       background_name: str,
       difficulty: int,
       level_type: LevelType,
-      hero: 'Hero',
+      hero: 'hero',
       window_size: tuple[int, int] = Var.DEFAULT_WINDOW_SIZE,
       wall_color: tuple[int, int, int] = Color.WALL_COLOR_DEFAULT) -> None:
     """
@@ -85,14 +85,14 @@ class Level:
   def get_hero(self) -> 'Hero':
     """
     Returns the character associated with the level.
-    :return: Hero object.
+    :return: hero object.
     """
     return self.__hero
 
   def _spawn_door(self) -> 'Door':
     """
     Spawns a door in a valid position.
-    :return: Door object.
+    :return: door object.
     """
     sprite_w, sprite_h = 40, 60
     max_attempts = 100
@@ -107,7 +107,7 @@ class Level:
   def _spawn_medkits(self) -> list['Medkit']:
     """
     Spawns medkits randomly, less likely as difficulty increases.
-    :return: List of Medkit objects.
+    :return: List of medkit objects.
     """
     medkits = []
     sprite_w, sprite_h = 24, 24
@@ -126,7 +126,7 @@ class Level:
   def get_door(self) -> Door:
     """
     Returns the door object.
-    :return: Door object.
+    :return: door object.
     """
     return self.__door
 
@@ -295,9 +295,9 @@ class Level:
     """
     Generates zombies at random positions not colliding with walls.
     :param num_zombies: Number of zombies to generate.
-    :return: List of Zombie objects.
+    :return: List of zombie objects.
     """
-    from lib.Core import Zombie
+    from lib.core import Zombie
     zombies: list[Zombie] = []
     sprite_w, sprite_h = (23, 30)
     x: int = 0
@@ -320,7 +320,7 @@ class Level:
     Starts combat if the hero is near a zombie.
     :param character: The hero character.
     :param zombies: List of zombies in the level.
-    :param font: Font to use for the combat modal.
+    :param font: font to use for the combat modal.
     :return: True if combat started, False otherwise.
     """
     if self.__combat_instance is None or not self.__combat_instance.get_active():
@@ -352,7 +352,7 @@ class Level:
     """
     Handles events for combat and the modal.
     :param event: Pygame event to handle.
-    :param font: Font to use for the combat modal.
+    :param font: font to use for the combat modal.
     """
     if (
         self.__combat_instance is not None
@@ -371,7 +371,7 @@ class Level:
     """
     Processes the player's answer in combat and updates the modal.
     :param player_answer: The answer provided by the player.
-    :param font: Font to use for the combat modal.
+    :param font: font to use for the combat modal.
     """
     result = self.__combat_instance.process_turn(player_answer.strip())
     self.__combat_modal.set_result_text(result)
@@ -491,7 +491,7 @@ class FeedbackBox:
       margin: int = 12) -> None:
     """
     Initializes the FeedbackBox singleton.
-    :param font: Font name for the message text.
+    :param font: font name for the message text.
     :param width: Width of the feedback box.
     :param height: Height of the feedback box.
     :param margin: Margin from the screen edges.
@@ -753,7 +753,7 @@ class PauseMenu:
 class TutorialLevel(Level):
   """Base class for tutorial levels."""
 
-  def __init__(self, config: dict, hero: 'Hero') -> None:
+  def __init__(self, config: dict, hero: 'hero') -> None:
     """
     Initializes the tutorial level with fixed elements.
     :param config: Configuration dictionary for the tutorial.
@@ -792,7 +792,7 @@ class TutorialLevel(Level):
   def _spawn_door(self) -> 'Door':
     """
     Spawns the door in a fixed position.
-    :return: Door object.
+    :return: door object.
     """
     sprite_w, sprite_h = 40, 60
     x = Var.DEFAULT_WINDOW_SIZE[0] - sprite_w - 30
@@ -818,7 +818,7 @@ class TutorialLevel(Level):
 class TutorialMoveLevel(TutorialLevel):
   """Movement tutorial."""
 
-  def __init__(self, config: dict, hero: 'Hero') -> None:
+  def __init__(self, config: dict, hero: 'hero') -> None:
     """
     Initializes the movement tutorial level.
     :param config: Configuration dictionary for the tutorial.
@@ -844,9 +844,9 @@ class TutorialCombatLevel(TutorialLevel):
     """
     One zombie in fixed position for combat tutorial.
     :param num_zombies: Number of zombies to spawn (ignored).
-    :return: List with one Zombie object.
+    :return: List with one zombie object.
     """
-    from lib.Core import Zombie
+    from lib.core import Zombie
     sprite_w, sprite_h = (23, 30)
     x = Var.DEFAULT_WINDOW_SIZE[0] // 2 - sprite_w // 2
     y = Var.DEFAULT_WINDOW_SIZE[1] // 2 - sprite_h // 2
@@ -869,7 +869,7 @@ class TutorialHealLevel(TutorialLevel):
   def _spawn_medkits(self) -> list['Medkit']:
     """
     One medkit in fixed position for healing tutorial.
-    :return: List with one Medkit object.
+    :return: List with one medkit object.
     """
     sprite_w, sprite_h = 24, 24
     x = Var.DEFAULT_WINDOW_SIZE[0] // 2 - sprite_w // 2
