@@ -13,6 +13,9 @@ class Door:
       sprite_dict: dict[str, 'Surface']) -> None:
     """
     Initializes the Door object.
+    :param x: The x-coordinate of the door.
+    :param y: The y-coordinate of the door.
+    :param sprite_dict: A dictionary of sprites for different door states.
     """
     self.__x = x
     self.__y = y
@@ -25,18 +28,21 @@ class Door:
   def get_x(self) -> int:
     """
     Returns the x-coordinate of the door.
+    :return The x-coordinate of the door.
     """
     return self.__x
 
   def get_y(self) -> int:
     """
     Returns the y-coordinate of the door.
+    :return The y-coordinate of the door.
     """
     return self.__y
 
   def get_state(self) -> str:
     """
     Returns the current state of the door.
+    :return The current state of the door.
     """
     return self.__state
 
@@ -73,6 +79,7 @@ class Door:
   def draw(self, surface: 'Surface') -> None:
     """
     Draws the door on the given surface.
+    :param surface: The surface to draw the door on.
     """
     surface.blit(self.__image, (self.__x, self.__y))
 
@@ -84,6 +91,9 @@ class Medkit:
       sprite_dict: dict[str, 'Surface']) -> None:
     """
     Initializes the Medkit object.
+    :param x: The x-coordinate of the medkit.
+    :param y: The y-coordinate of the medkit.
+    :param sprite_dict: A dictionary of sprites for the medkit.
     """
     self.__x = x
     self.__y = y
@@ -96,18 +106,21 @@ class Medkit:
   def get_x(self) -> int:
     """
     Returns the x-coordinate of the medkit.
+    :return The x-coordinate of the medkit.
     """
     return self.__x
 
   def get_y(self) -> int:
     """
     Returns the y-coordinate of the medkit.
+    :return The y-coordinate of the medkit.
     """
     return self.__y
 
   def draw(self, surface: 'Surface') -> None:
     """
     Draws the medkit on the given surface.
+    :param surface: The surface to draw the medkit on.
     """
     if not self.__used:
       surface.blit(self.__image, (self.__x, self.__y))
@@ -115,6 +128,7 @@ class Medkit:
   def apply(self, hero: 'Hero') -> None:
     """
     Heals the hero and plays a sound.
+    :param hero: The hero to heal.
     """
     if not self.__used and hero.get_health() < hero.get_max_health():
       hero.apply_medkit(self)
@@ -126,11 +140,13 @@ class Medkit:
   def get_used(self) -> bool:
     """
     Returns whether the medkit has been used.
+    :return True if the medkit has been used, False otherwise.
     """
     return self.__used
 
   def get_heal_amount(self) -> int:
     """
     Returns the amount of health the medkit restores.
+    :return The amount of health the medkit restores.
     """
     return self.__heal_amount
