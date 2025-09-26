@@ -38,7 +38,12 @@ class Level:
       wall_color: tuple[int, int, int] = Color.WALL_COLOR_DEFAULT) -> None:
     """
     Initializes the Level with maze, background, and questions.
-
+    :param background_name: Name of the background image.
+    :param difficulty: Difficulty level (0-5).
+    :param level_type: Type of questions for combat.
+    :param hero: The hero character.
+    :param window_size: Size of the game window.
+    :param wall_color: Color of the maze walls.
     """
     self.__death_handled: None = None
     self.__window_size: tuple[int, int] = window_size
@@ -63,19 +68,31 @@ class Level:
     self.__pause_menu_font = pygame.font.SysFont(Var.FONT, 28)
 
   def get_level_type(self) -> LevelType:
-    """Returns the level type."""
+    """
+    Returns the level type.
+    :return: LevelType enum value.
+    """
     return self.__level_type
 
   def get_difficulty(self) -> int:
-    """Returns the difficulty level."""
+    """
+    Returns the difficulty level.
+    :return: Difficulty as an integer.
+    """
     return self.__difficulty
 
-  def get_character(self) -> 'Hero':
-    """Returns the character associated with the level."""
+  def get_hero(self) -> 'Hero':
+    """
+    Returns the character associated with the level.
+    :return: Hero object.
+    """
     return self.__hero
 
   def _spawn_door(self) -> 'Door':
-    """Spawns a door in a valid position (not colliding with maze walls)."""
+    """
+    Spawns a door in a valid position.
+    :return: Door object.
+    """
     sprite_w, sprite_h = 40, 60
     max_attempts = 100
     for _ in range(max_attempts):
@@ -84,11 +101,13 @@ class Level:
       rect = pygame.Rect(x, y, sprite_w, sprite_h)
       if not self.check_collision(rect):
         return Door(x, y, DOOR_1_SPRITES)
-    # Si no encuentra lugar, la pone en (0,0)
     return Door(0, 0, DOOR_1_SPRITES)
 
   def _spawn_medkits(self) -> list['Medkit']:
-    """Spawns medkits randomly, less likely as difficulty increases."""
+    """
+    Spawns medkits randomly, less likely as difficulty increases.
+    :return: List of Medkit objects.
+    """
     medkits = []
     sprite_w, sprite_h = 24, 24
     max_medkits = max(0, 2 - self.__difficulty)
@@ -104,13 +123,19 @@ class Level:
     return medkits
 
   def get_door(self) -> Door:
-    """Returns the door object."""
+    """
+    Returns the door object.
+    :return: Door object.
+    """
     return self.__door
 
   @staticmethod
   def _init_maze_structures(cols: int, rows: int) -> tuple:
     """
     Initializes the structures for maze generation.
+    :param cols: Number of columns in the maze.
+    :param rows: Number of rows in the maze.
+    :return: Tuple of visited cells, vertical walls, and horizontal walls.
     """
     visited: list[list[bool]] = [[False for _ in range(rows)] for _ in
                                  range(cols)]
@@ -124,7 +149,17 @@ class Level:
       visited: list[list[bool]],
       vertical_walls: list[list[int]],
       horizontal_walls: list[list[int]]) -> None:
-    """Depth-First Search maze generation algorithm."""
+    """
+    Depth-First Search maze generation algorithm.
+    :param cx: Current x position in the maze grid.
+    :param cy: Current y position in the maze grid.
+    :param cols: Total columns in the maze.
+    :param rows: Total rows in the maze.
+    :param visited: 2D list tracking visited cells.
+    :param vertical_walls: 2D list tracking vertical walls.
+    :param horizontal_walls: 2D list tracking horizontal walls.
+    :return: None
+    """
     visited[cx][cy] = True
     directions = [(0, -1), (1, 0), (0, 1), (-1, 0)]
     random.shuffle(directions)
@@ -148,7 +183,17 @@ class Level:
       window_size: tuple[int, int],
       vertical_walls: list[list[int]], horizontal_walls: list[list[int]]) -> \
       list[Rect]:
-    """Builds the maze walls from the wall structures."""
+    """
+    Builds the maze walls from the wall structures.
+    :param cols: Number of columns in the maze.
+    :param rows: Number of rows in the maze.
+    :param cell_size: Size of each cell in pixels.
+    :param wall_thickness: Thickness of the walls in pixels.
+    :param window_size: Size of the game window.
+    :param vertical_walls: 2D list of vertical wall presence.
+    :param horizontal_walls: 2D list of horizontal wall presence.
+    :return: List of Rect objects representing walls.
+    """
     w, h = window_size
     walls: list[Rect] = []
     # Build vertical walls
@@ -178,6 +223,10 @@ class Level:
       cell_size: int = Var.DEFAULT_CELL_SIZE) -> list[Rect]:
     """
     Generates a random maze using DFS algorithm.
+    :param window_size: Size of the game window.
+    :param wall_thickness: Thickness of the walls in pixels.
+    :param cell_size: Size of each cell in pixels.
+    :return: List of Rect objects representing maze walls.
     """
     w, h = window_size
     cols = w // cell_size
@@ -195,11 +244,17 @@ class Level:
     return walls
 
   def draw_background(self, surface: Surface) -> None:
-    """Draws the background image on the given surface."""
+    """
+    Draws the background image on the given surface.
+    :param surface: Pygame Surface to draw the background on.
+    """
     surface.blit(self.__background, (0, 0))
 
   def draw_maze(self, surface: Surface) -> None:
-    """Draws the maze walls and the door on the given surface."""
+    """
+    Draws the maze walls and the door on the given surface.
+    :param surface: Pygame Surface to draw the maze on.
+    """
     for wall in self.__maze_walls:
       pygame.draw.rect(surface, self.__wall_color, wall)
     if self.__door:
@@ -211,7 +266,10 @@ class Level:
         medkit.draw(surface)
 
   def check_collision(self, rect: Rect) -> bool:
-    """Returns True if rect collides with any maze wall."""
+    """
+    Returns True if rect collides with any maze wall.
+    :param rect: Pygame Rect to check for collisions.
+    """
     for wall in self.__maze_walls:
       if rect.colliderect(wall):
         return True
@@ -233,7 +291,11 @@ class Level:
     channel.get_queue().play(fade_ms=7000)
 
   def generate_zombies(self, num_zombies: int) -> list['Zombie']:
-    """Generates zombies at random positions not colliding with walls."""
+    """
+    Generates zombies at random positions not colliding with walls.
+    :param num_zombies: Number of zombies to generate.
+    :return: List of Zombie objects.
+    """
     from lib.Core import Zombie
     zombies: list[Zombie] = []
     sprite_w, sprite_h = (23, 30)
@@ -253,7 +315,13 @@ class Level:
 
   def start_combat(self, character: 'Character', zombies: list['Zombie'],
       font: FontType) -> bool:
-    """Starts combat if the hero is near a zombie."""
+    """
+    Starts combat if the hero is near a zombie.
+    :param character: The hero character.
+    :param zombies: List of zombies in the level.
+    :param font: Font to use for the combat modal.
+    :return: True if combat started, False otherwise.
+    """
     if self.__combat_instance is None or not self.__combat_instance.get_active():
       for zombie in zombies:
         if zombie.is_alive() and character.can_attack(zombie):
@@ -280,57 +348,84 @@ class Level:
     return False
 
   def handle_combat_event(self, event: EventType, font: FontType) -> None:
-    """Handles events for combat and the modal."""
-    if self.__combat_instance is not None and self.__combat_instance.get_active() and self.__combat_modal:
+    """
+    Handles events for combat and the modal.
+    :param event: Pygame event to handle.
+    :param font: Font to use for the combat modal.
+    """
+    if (
+        self.__combat_instance is not None
+        and self.__combat_instance.get_active()
+        and self.__combat_modal
+    ):
       self.__combat_modal.handle_combat_event(event)
       if self.__combat_modal.get_confirmed():
         player_answer = self.__combat_modal.get_player_answer()
         if player_answer:
-          result = self.__combat_instance.process_turn(player_answer.strip())
-          self.__combat_modal.set_result_text(result)
-          FeedbackBox.get_instance().set_message(result, 3, 0)
-          if self.__combat_instance.get_active():
-
-            if self.__combat_instance.get_combat_type() == "word_ordering":
-              words = self.__combat_instance.get_current_question().split(" / ")
-              self.__combat_modal = WordOrderingModal(words, font,
-                                                      pygame.Rect(40, 100, 560,
-                                                                  260),
-                                                      result_text=result)
-            elif self.__combat_instance.get_combat_type() == "multiple_choice":
-              q, options, _ = self.__combat_instance.get_current_question()
-              self.__combat_modal = MultipleChoiceModal(q, options, font,
-                                                        pygame.Rect(40, 100,
-                                                                    560,
-                                                                    260),
-                                                        result_text=result)
-            elif self.__combat_instance.get_combat_type() == "fill_in_the_blank":
-              self.__combat_modal = FillGapsModal(
-                  self.__combat_instance.get_current_question(), font,
-                  pygame.Rect(40, 100, 560, 260), result_text=result)
-            else:
-              self.__combat_modal = None
-          else:
-            self.__combat_modal = None
+          self._process_combat_answer(player_answer, font)
         else:
           self.__combat_modal.set_confirmed(False)
 
+  def _process_combat_answer(self, player_answer: str, font: FontType) -> None:
+    """
+    Processes the player's answer in combat and updates the modal.
+    :param player_answer: The answer provided by the player.
+    :param font: Font to use for the combat modal.
+    """
+    result = self.__combat_instance.process_turn(player_answer.strip())
+    self.__combat_modal.set_result_text(result)
+    FeedbackBox.get_instance().set_message(result, 3, 0)
+    if self.__combat_instance.get_active():
+      combat_type = self.__combat_instance.get_combat_type()
+      if combat_type == "word_ordering":
+        words = self.__combat_instance.get_current_question().split(" / ")
+        self.__combat_modal = WordOrderingModal(
+            words, font, pygame.Rect(40, 100, 560, 260), result_text=result
+        )
+      elif combat_type == "multiple_choice":
+        q, options, _ = self.__combat_instance.get_current_question()
+        self.__combat_modal = MultipleChoiceModal(
+            q, options, font, pygame.Rect(40, 100, 560, 260), result_text=result
+        )
+      elif combat_type == "fill_in_the_blank":
+        self.__combat_modal = FillGapsModal(
+            self.__combat_instance.get_current_question(),
+            font,
+            pygame.Rect(40, 100, 560, 260),
+            result_text=result,
+        )
+      else:
+        self.__combat_modal = None
+    else:
+      self.__combat_modal = None
+
   def get_combat_modal(self) -> 'BaseCombatModal':
-    """Returns the current modal if it exists."""
+    """
+    Returns the current modal if it exists.
+    :return: Combat modal object.
+    """
     return self.__combat_modal
 
   def get_combat_instance(self) -> 'Combat':
-    """Returns the current combat instance."""
+    """
+    Returns the current combat instance.
+    :return: Combat instance object.
+    """
     return self.__combat_instance
 
   def check_open_door(self, zombies: list['Zombie']) -> None:
-    """Opens the door if all zombies are defeated."""
+    """
+    Opens the door if all zombies are defeated.
+    :param zombies: List of zombies in the level.
+    """
     if self.__door and self.__door.get_state() == "closed":
       if all(not z.is_alive() for z in zombies):
         self.__door.open()
 
   def check_medkit_pickup(self) -> None:
-    """Checks if hero picks up a medkit and heals."""
+    """
+    Checks if hero picks up a medkit and heals.
+    """
     for medkit in self.__medkits:
       if not medkit.get_used() and self.__hero.get_health() < self.__hero.get_max_health():
         hero_rect = pygame.Rect(self.__hero.get_x(), self.__hero.get_y(), 23,
@@ -341,7 +436,10 @@ class Level:
         if hero_rect.colliderect(medkit_rect):
           medkit.apply(self.__hero)
 
-  def get_pause_menu(self):
+  def get_pause_menu(self) -> 'PauseMenu':
+    """
+    Returns the pause menu, creating it if necessary.
+    """
     if self.__pause_menu is None:
       self.__pause_menu = PauseMenu(self.__pause_menu_font,
                                     pygame.Rect(120, 100, 400, 220))
@@ -349,7 +447,9 @@ class Level:
 
   def handle_pause_event(self, event: EventType) -> str | None:
     """
-    Maneja eventos para el menú de pausa.
+    Handles events for the pause menu.
+    :param event: Pygame event to handle.
+    :return: "pause_opened", "pause_closed", or result from pause menu event
     """
     pause_menu = self.get_pause_menu()
     if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -371,7 +471,11 @@ class Level:
         pygame.mixer.find_channel().play(SOUNDS["blip1"])
     return result
 
-  def draw_pause_menu(self, surface: Surface):
+  def draw_pause_menu(self, surface: Surface) -> None:
+    """
+    Draws the pause menu if active.
+    :param surface: Pygame Surface to draw the pause menu on.
+    """
     pause_menu = self.get_pause_menu()
     if pause_menu.get_active():
       pause_menu.draw(surface)
@@ -386,6 +490,10 @@ class FeedbackBox:
       margin: int = 12) -> None:
     """
     Initializes the FeedbackBox singleton.
+    :param font: Font name for the message text.
+    :param width: Width of the feedback box.
+    :param height: Height of the feedback box.
+    :param margin: Margin from the screen edges.
     """
     if FeedbackBox.__instance is not None:
       raise Exception(
@@ -414,12 +522,21 @@ class FeedbackBox:
   def set_message(msg: str, duration: float = 5.0, delay: float = 0.0) -> None:
     """
     Sets the feedback message globally, with optional delay before showing.
+    :param msg: Message text to display.
+    :param duration: Duration in seconds to display the message.
+    :param delay: Delay in seconds before showing the message.
     """
     box = FeedbackBox.get_instance()
     box._set_message(msg, duration, delay)
 
   def _set_message(self, msg: str, duration: float = 5.0,
       delay: float = 0.0) -> None:
+    """
+    Sets the feedback message, resetting timers if the message changes.
+    :param msg: Message text to display.
+    :param duration: Duration in seconds to display the message.
+    :param delay: Delay in seconds before showing the message.
+    """
     if msg != self.__message:
       print("Setting new message:", msg)
       self.__message = msg
@@ -431,6 +548,7 @@ class FeedbackBox:
   def get_message(self) -> str:
     """
     Returns the current feedback message.
+    :return: Current message text.
     """
     return self.__message
 
@@ -444,6 +562,8 @@ class FeedbackBox:
   def _wrap_text(self, text: str) -> list[str]:
     """
     Divides the text into lines that fit within the box width.
+    :param text: Text to wrap.
+    :return: List of text lines.
     """
     words = text.split(' ')
     lines = []
@@ -461,9 +581,10 @@ class FeedbackBox:
       lines.append(current_line)
     return lines
 
-  def draw(self, surface: pygame.Surface) -> None:
+  def draw(self, surface: Surface) -> None:
     """
     Draws the feedback box on the given surface if time not expired and delay passed.
+    :param surface: Pygame Surface to draw the feedback box on.
     """
     if self.__message:
       if self.__delay > 0 and self.__delay_start_time is not None:
@@ -493,6 +614,11 @@ class PauseMenu:
   """Pause menu class"""
 
   def __init__(self, font: FontType, rect: Rect) -> None:
+    """
+    Initializes the pause menu.
+    :param font: font for rendering text.
+    :param rect: rectangle defining menu position and size.
+    """
     self.__font = font
     self.__rect = rect
     self.__selected = 0
@@ -510,21 +636,39 @@ class PauseMenu:
     ]
 
   def get_confirming(self) -> bool:
+    """
+    Returns whether the menu is in confirmation state.
+    :return: True if confirming, False otherwise.
+    """
     return self.__confirming
 
   def get_active(self) -> bool:
+    """
+    Returns whether the pause menu is active.
+    :return: True if active, False otherwise.
+    """
     return self.__active
 
-  def open(self):
+  def open(self) -> None:
+    """
+    Opens the pause menu, resetting selections.
+    """
     self.__active = True
     self.__selected = 0
     self.__confirming = False
 
   def close(self):
+    """
+    Closes the pause menu.
+    """
     self.__active = False
     self.__confirming = False
 
-  def draw(self, surface: Surface):
+  def draw(self, surface: Surface) -> None:
+    """
+    Draws the pause menu on the given surface.
+    :param surface: Pygame Surface to draw the pause menu on.
+    """
     overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
     overlay.fill((0, 0, 0, 120))
     surface.blit(overlay, (0, 0))
@@ -555,33 +699,53 @@ class PauseMenu:
         txt_rect = txt_surf.get_rect(center=self.__confirm_rects[i].center)
         surface.blit(txt_surf, txt_rect)
 
-  def handle_event(self, event: EventType):
-    if not self.__active:
+  def handle_event(self, event: EventType) -> str | None:
+    """
+    Handles events for the pause menu.
+    :param event: the Pygame event to handle.
+    """
+    if not self.__active or event.type != pygame.KEYDOWN:
       return None
-    if event.type == pygame.KEYDOWN:
-      if not self.__confirming:
-        if event.key in [pygame.K_UP]:
-          self.__selected = (self.__selected - 1) % 2
-        elif event.key in [pygame.K_DOWN]:
-          self.__selected = (self.__selected + 1) % 2
-        elif event.key in [pygame.K_RETURN]:
-          if self.__selected == 0:
-            self.close()
-            return "continue"
-          elif self.__selected == 1:
-            self.__confirming = True
-            self.__confirm_selected = 1
+
+    if not self.__confirming:
+      return self._handle_main_menu_event(event)
+    else:
+      return self._handle_confirm_event(event)
+
+  def _handle_main_menu_event(self, event: EventType) -> str | None:
+    """
+    Handles main menu navigation events.
+    :param event: the Pygame event to handle.
+    :return: "continue", "main_menu", or None.
+    """
+    if event.key == pygame.K_UP:
+      self.__selected = (self.__selected - 1) % 2
+    elif event.key == pygame.K_DOWN:
+      self.__selected = (self.__selected + 1) % 2
+    elif event.key == pygame.K_RETURN:
+      if self.__selected == 0:
+        self.close()
+        return "continue"
+      elif self.__selected == 1:
+        self.__confirming = True
+        self.__confirm_selected = 1
+    return None
+
+  def _handle_confirm_event(self, event: EventType) -> str | None:
+    """
+    Handles confirmation dialog events.
+    :param event: the Pygame event to handle.
+    """
+    if event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
+      self.__confirm_selected = 1 if self.__confirm_selected == 0 else 0
+      print("confirm selected set to", self.__confirm_selected)
+    elif event.key == pygame.K_RETURN:
+      print("confirm selected is", self.__confirm_selected)
+      if self.__confirm_selected == 0:
+        self.close()
+        return "main_menu"
       else:
-        if event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
-          self.__confirm_selected = 1 if self.__confirm_selected == 0 else 0
-          print("confirm selected set to", self.__confirm_selected)
-        elif event.key in [pygame.K_RETURN]:
-          print("confirm selected is", self.__confirm_selected)
-          if self.__confirm_selected == 0:
-            self.close()
-            return "main_menu"
-          else:
-            self.__confirming = False
+        self.__confirming = False
     return None
 
 
@@ -589,6 +753,11 @@ class TutorialLevel(Level):
   """Base class for tutorial levels."""
 
   def __init__(self, config: dict, hero: 'Hero') -> None:
+    """
+    Initializes the tutorial level with fixed elements.
+    :param config: Configuration dictionary for the tutorial.
+    :param hero: The hero character.
+    """
     super().__init__(
         background_name=config.get("background", "grass"),
         difficulty=config.get("difficulty", 0),
@@ -603,6 +772,9 @@ class TutorialLevel(Level):
     self._show_message()
 
   def _show_message(self) -> None:
+    """
+    Displays the tutorial message if configured.
+    """
     msg = self.__tutorial_config.get("message")
     if msg:
       FeedbackBox.get_instance().set_message(msg, 8, 1.5)
@@ -610,19 +782,35 @@ class TutorialLevel(Level):
   def _generate_random_maze(self, window_size: tuple[int, int],
       wall_thickness: int = Var.DEFAULT_WALL_THICKNESS,
       cell_size: int = Var.DEFAULT_CELL_SIZE) -> list[Rect]:
+    """
+    Overrides maze generation to create an empty level.
+    :return: Empty list of walls.
+    """
     return []
 
   def _spawn_door(self) -> 'Door':
-    # Puerta en posición fija para tutorial
+    """
+    Spawns the door in a fixed position.
+    :return: Door object.
+    """
     sprite_w, sprite_h = 40, 60
     x = Var.DEFAULT_WINDOW_SIZE[0] - sprite_w - 30
     y = Var.DEFAULT_WINDOW_SIZE[1] // 2 - sprite_h // 2
     return Door(x, y, DOOR_1_SPRITES)
 
   def _spawn_medkits(self) -> list['Medkit']:
+    """
+    Spawns no medkits in tutorial levels.
+    :return: Empty list of medkits.
+    """
     return []
 
   def generate_zombies(self, num_zombies: int) -> list['Zombie']:
+    """
+    Spawns no zombies in tutorial levels.
+    :param num_zombies: Number of zombies to spawn (ignored).
+    :return: Empty list of zombies.
+    """
     return []
 
 
@@ -630,6 +818,11 @@ class TutorialMoveLevel(TutorialLevel):
   """Movement tutorial."""
 
   def __init__(self, config: dict, hero: 'Hero') -> None:
+    """
+    Initializes the movement tutorial level.
+    :param config: Configuration dictionary for the tutorial.
+    :param hero: The hero character.
+    """
     super().__init__(config, hero)
     self._show_message()
 
@@ -638,11 +831,20 @@ class TutorialCombatLevel(TutorialLevel):
   """Combat tutorial"""
 
   def __init__(self, config: dict, hero: 'Hero') -> None:
+    """
+    Initializes the movement tutorial level.
+    :param config: Configuration dictionary for the tutorial.
+    :param hero: The hero character.
+    """
     super().__init__(config, hero)
     self._show_message()
 
-  def generate_zombies(self, num_zombies: int):
-    """One zombie in fixed position for combat tutorial."""
+  def generate_zombies(self, num_zombies: int) -> list['Zombie']:
+    """
+    One zombie in fixed position for combat tutorial.
+    :param num_zombies: Number of zombies to spawn (ignored).
+    :return: List with one Zombie object.
+    """
     from lib.Core import Zombie
     sprite_w, sprite_h = (23, 30)
     x = Var.DEFAULT_WINDOW_SIZE[0] // 2 - sprite_w // 2
@@ -654,11 +856,20 @@ class TutorialHealLevel(TutorialLevel):
   """Healing tutorial."""
 
   def __init__(self, config: dict, hero: 'Hero') -> None:
+    """
+    Initializes the movement tutorial level.
+    :param config: Configuration dictionary for the tutorial.
+    :param hero: The hero character.
+    """
     super().__init__(config, hero)
     self._show_message()
-    self.get_character().receive_damage(25)
+    self.get_hero().receive_damage(25)
 
   def _spawn_medkits(self) -> list['Medkit']:
+    """
+    One medkit in fixed position for healing tutorial.
+    :return: List with one Medkit object.
+    """
     sprite_w, sprite_h = 24, 24
     x = Var.DEFAULT_WINDOW_SIZE[0] // 2 - sprite_w // 2
     y = Var.DEFAULT_WINDOW_SIZE[1] // 2 - sprite_h // 2
