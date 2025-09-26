@@ -1,3 +1,6 @@
+"""
+This module loads and provides access to the hero character sprites.
+"""
 import pygame
 import os
 

@@ -9,6 +9,7 @@ from pygame.font import FontType
 from pygame.mixer import Channel
 from pygame.time import Clock
 
+from Font import FONTS
 from Sound import SOUNDS
 from Sprite.Backgrounds import BACKGROUNDS
 from lib import Functions
@@ -40,7 +41,7 @@ attack_pressed: bool = False
 combat_instance: Optional[Combat] = None
 combat_input_text = ""
 combat_result_text = ""
-font = pygame.font.SysFont(Var.FONT, 24)
+font = pygame.font.Font(FONTS.get("roboto"), 16)
 
 feedbackBox = FeedbackBox.get_instance()
 first_level: bool = True
@@ -226,48 +227,59 @@ def update_all_sprites() -> None:
     zombie.update_sprite_after_damage()
 
 
-def draw_menu(menu_window: Surface, menu_font: FontType,
+def draw_menu(menu_window: Surface, menu_font: FontType, title_font: FontType,
     background_img: Surface,
-    selected_idx,
+    selected_idx: int,
     options) -> None:
   """
   Draws main menu.
+  :param menu_window: The pygame window surface.
+  :param title_font: Font for the title.
+  :param menu_font: Font for the menu options.
+  :param background_img: Background image for the menu.
+  :param selected_idx: Index of the currently selected option.
+  :param options: List of menu option strings.
   """
   menu_window.blit(background_img, (0, 0))
   overlay = pygame.Surface(Var.DEFAULT_WINDOW_SIZE)
   overlay.set_alpha(180)
   overlay.fill((0, 0, 0))
   menu_window.blit(overlay, (0, 0))
-  title = menu_font.render("English Battle", True, (255, 255, 255))
+  title = menu_font.render("English Battle", True, Color.TEXT)
   menu_window.blit(title,
                    (Var.DEFAULT_WINDOW_SIZE[0] // 2 - title.get_width() // 2,
                     60))
   for idx, opt in enumerate(options):
     color = Color.MENU_SELECTED_BTN if idx == selected_idx else Color.MENU_UNSELECTED_BTN
-    txt = menu_font.render(opt, True, color)
+    txt = title_font.render(opt, True, color)
     x = Var.DEFAULT_WINDOW_SIZE[0] // 2 - txt.get_width() // 2
     y = 160 + idx * 60
     menu_window.blit(txt, (x, y))
   pygame.display.flip()
 
 
-def draw_level_select(win: Surface, menu_font: FontType,
+def draw_level_select(win: Surface,
     background_img: Surface,
     selected_idx: int,
     levels: dict[str, int]) -> None:
   """
   Draws level selection menu.
+  :param win: The pygame window surface.
+  :param background_img: Background image for the menu.
+  :param selected_idx: Index of the currently selected level.
+  :param levels: List of level names.
   """
   win.blit(background_img, (0, 0))
   overlay = pygame.Surface(Var.DEFAULT_WINDOW_SIZE)
   overlay.set_alpha(180)
   overlay.fill((0, 0, 0))
   win.blit(overlay, (0, 0))
-  title = menu_font.render("Selecciona nivel", True, (255, 255, 255))
+  title_font = pygame.font.Font(FONTS.get("press-start-2p"), 20)
+  level_font = pygame.font.Font(FONTS.get("press-start-2p"), 10)
+  title = title_font.render("Selecciona nivel", True, Color.TEXT)
   win.blit(title,
            (Var.DEFAULT_WINDOW_SIZE[0] // 2 - title.get_width() // 2, 60))
 
-  level_font = pygame.font.SysFont(Var.FONT, 20)
   max_visible = 7
   half = max_visible // 2
   start_idx = max(0, selected_idx - half)
@@ -278,7 +290,7 @@ def draw_level_select(win: Surface, menu_font: FontType,
 
   for idx, lvl in enumerate(visible_levels):
     real_idx = start_idx + idx
-    color = (0, 255, 0) if real_idx == selected_idx else (255, 255, 255)
+    color = Color.HIGHIGHT_TEXT if real_idx == selected_idx else Color.TEXT
     txt = level_font.render(lvl, True, color)
     x = Var.DEFAULT_WINDOW_SIZE[0] // 2 - txt.get_width() // 2
     y = 160 + idx * 36
@@ -300,14 +312,13 @@ def get_level_type(type_str: str) -> LevelType:
 
 def level_select_menu(bg_img: Surface) -> Optional[int]:
   """Displays the level selection menu and handles navigation."""
-  font_menu = pygame.font.SysFont(Var.FONT, 32)
   levels = [lvl["name"] for lvl in Var.LEVELS_CONFIG]
   levels.append("Volver")
   selected = 0
   level_selected = False
   channel: Channel = pygame.mixer.find_channel()
   while not level_selected:
-    draw_level_select(window, font_menu, bg_img, selected, levels)
+    draw_level_select(window, bg_img, selected, levels)
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         close_game()
@@ -350,7 +361,8 @@ def setup_level(level_idx: int) -> None:
 def main_menu() -> None:
   """Displays the main menu and handles navigation."""
   global current_level_idx
-  font_menu = pygame.font.SysFont(Var.FONT, 32)
+  font_title = pygame.font.Font(FONTS.get("retro-british"), 32)
+  font_menu = pygame.font.Font(FONTS.get("press-start-2p"), 16)
   bg_img = pygame.transform.scale(random.choice(list(BACKGROUNDS.items()))[1],
                                   Var.DEFAULT_WINDOW_SIZE)
   options = ["Nuevo juego", "Salir"]
@@ -359,7 +371,7 @@ def main_menu() -> None:
   menu_active = True
   selected_level = False
   while menu_active:
-    draw_menu(window, font_menu, bg_img, idx_selected, options)
+    draw_menu(window, font_title, font_menu, bg_img, idx_selected, options)
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         close_game()

@@ -1,16 +1,16 @@
 """Core module for the game, defining characters and their behaviors."""
 
+import random
 from abc import ABC
 
 import pygame
-import random
 from pygame import Surface
 from pygame.mixer import SoundType
 
-from lib.Level import Level
 from Sound import SOUNDS
-from lib.Var import Var
 from lib.Color import Color
+from lib.Level import Level
+from lib.Var import Var
 
 
 class Character(ABC):

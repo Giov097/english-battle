@@ -9,6 +9,7 @@ from pygame.event import EventType
 from pygame.font import FontType
 from pygame.mixer import Channel
 
+from Font import FONTS
 from Sound import SOUNDS
 from Sprite.Backgrounds import BACKGROUNDS
 from Sprite.Levels import DOOR_1_SPRITES, MEDKIT_SPRITES
@@ -65,7 +66,7 @@ class Level:
     self.__wall_color = wall_color
     self.__hero = hero
     self.__pause_menu = None
-    self.__pause_menu_font = pygame.font.SysFont(Var.FONT, 28)
+    self.__pause_menu_font = pygame.font.Font(FONTS.get("press-start-2p"), 12)
 
   def get_level_type(self) -> LevelType:
     """
@@ -486,7 +487,7 @@ class FeedbackBox:
 
   __instance = None
 
-  def __init__(self, font: str = Var.FONT, width: int = 160, height: int = 24,
+  def __init__(self, font: str = FONTS.get("roboto"), width: int = 160, height: int = 24,
       margin: int = 12) -> None:
     """
     Initializes the FeedbackBox singleton.
@@ -499,7 +500,7 @@ class FeedbackBox:
       raise Exception(
           "Use FeedbackBox.get_instance() to get the singleton instance.")
     self.__message = ""
-    self.__font = pygame.font.SysFont(font, 16)
+    self.__font = pygame.font.Font(font, 12)
     self.__width = width
     self.__height = height
     self.__margin = margin

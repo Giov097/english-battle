@@ -19,6 +19,8 @@ class Color:
   ANSWER_WORD_BG: tuple[int, int, int] = (255, 255, 200)
   DRAG_WORD_BG: tuple[int, int, int] = (200, 200, 255)
   TITLE_TEXT: tuple[int, int, int] = (0, 0, 0)
+  TEXT: tuple[int, int, int] = (255, 255, 255)
+  HIGHIGHT_TEXT: tuple[int, int, int] = (0, 255, 0)
   WORD_BG_DISABLED: tuple[int, int, int] = (200, 200, 200)
   WORD_TEXT_DISABLED: tuple[int, int, int] = (120, 120, 120)
   ANSWER_AREA_BG: tuple[int, int, int] = (230, 255, 230)

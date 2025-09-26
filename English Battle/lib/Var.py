@@ -17,9 +17,7 @@ class Var:
   DEFAULT_CELL_SIZE: int = 80
   DEFAULT_DEATH_FADE_DURATION: float = 5.0
 
-  FONT: str = "Roboto"
   TEXT_COLOR: tuple[int, int, int] = (255, 255, 255)
-
 
   QUESTIONS = {
     # Fácil
@@ -33,7 +31,8 @@ class Var:
         (("You", "are", "tired"), "You are tired"),
         (("It", "is", "cold", "today"), "It is cold today"),
         (("We", "are", "in", "the", "park"), "We are in the park"),
-        (("The", "book", "is", "on", "the", "table"), "The book is on the table"),
+        (("The", "book", "is", "on", "the", "table"),
+         "The book is on the table"),
         (("She", "has", "a", "red", "car"), "She has a red car"),
       ],
       "multiple_choice": [
