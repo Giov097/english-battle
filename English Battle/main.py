@@ -10,7 +10,6 @@ from pygame.mixer import Channel
 from pygame.time import Clock
 
 from font import FONTS
-from lib import var
 from lib.color import Color
 from lib.combat import Combat
 from lib.core import Hero, Zombie
@@ -445,7 +444,7 @@ def main_loop() -> None:
   """Main game loop."""
   global repeat
   pygame.mixer.music.load(MUSIC.get("game-8-bit"))
-  pygame.mixer.music.play()
+  pygame.mixer.music.play(-1)
   main_menu()
   while repeat:
     if not character.is_alive():
