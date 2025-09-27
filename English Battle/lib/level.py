@@ -487,7 +487,8 @@ class FeedbackBox:
 
   __instance = None
 
-  def __init__(self, font: str = FONTS.get("roboto"), width: int = 160, height: int = 24,
+  def __init__(self, font: str = FONTS.get("roboto"), width: int = 160,
+      height: int = 24,
       margin: int = 12) -> None:
     """
     Initializes the FeedbackBox singleton.
@@ -739,9 +740,7 @@ class PauseMenu:
     """
     if event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
       self.__confirm_selected = 1 if self.__confirm_selected == 0 else 0
-      print("confirm selected set to", self.__confirm_selected)
     elif event.key == pygame.K_RETURN:
-      print("confirm selected is", self.__confirm_selected)
       if self.__confirm_selected == 0:
         self.close()
         return "main_menu"

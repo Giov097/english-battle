@@ -498,3 +498,10 @@ class Var:
 
   MUSIC_CHANNEL = pygame.mixer.music
   SFX_CHANNEL = pygame.mixer.Channel(7)
+
+  current_level_idx: int = 0
+  first_level: bool = True
+  zombies: list['Zombie'] = []
+
+  level: 'Level'
+  character: 'Hero'
