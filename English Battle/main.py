@@ -30,7 +30,6 @@ level: Level
 character: Hero
 
 repeat: bool = True
-# Para limitar los FPS
 clock: Clock = pygame.time.Clock()
 
 ZOMBIE_MOVE_INTERVAL: int = 10
@@ -290,7 +289,7 @@ def draw_level_select(win: Surface,
 
   for idx, lvl in enumerate(visible_levels):
     real_idx = start_idx + idx
-    color = Color.HIGHIGHT_TEXT if real_idx == selected_idx else Color.TEXT
+    color = Color.HIGHLIGHT_TEXT if real_idx == selected_idx else Color.TEXT
     txt = level_font.render(lvl, True, color)
     x = Var.DEFAULT_WINDOW_SIZE[0] // 2 - txt.get_width() // 2
     y = 160 + idx * 36
@@ -425,7 +424,6 @@ def check_advance_level() -> None:
 
 def get_next_level_index() -> int | None:
   """Returns the index of the next level, or None if finished."""
-  # No es confiable, mejor buscar por config
   global current_level_idx
   if current_level_idx is not None and current_level_idx + 1 < len(
       Var.LEVELS_CONFIG):
@@ -435,7 +433,7 @@ def get_next_level_index() -> int | None:
 
 def transition_black_screen(duration: float = 1.0) -> None:
   """Shows a black screen for the given duration (seconds)."""
-  window.fill((0, 0, 0))
+  window.fill(Color.TRANSITION_SCREEN)
   pygame.display.flip()
   pygame.time.delay(int(duration * 1000))
 
