@@ -80,8 +80,8 @@ class Var:
       "word_ordering": [
         (("He", "is", "eating", "pizza"), "He is eating pizza"),
         (("You", "are", "not", "my", "friend"), "You are not my friend"),
-        (("The", "cat", "is", "not", "on", "the", "roof"),
-         "The cat is not on the roof"),
+        (("My", "cat", "is", "not", "on", "the", "roof"),
+         "My cat is not on the roof"),
         (("My", "brother", "is", "playing", "football"),
          "My brother is playing football"),
         (("Are", "you", "studying", "English"), "Are you studying English?"),

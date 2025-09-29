@@ -221,7 +221,14 @@ class Character(ABC):
     )
     dist = ((self_center[0] - other_center[0]) ** 2 +
             (self_center[1] - other_center[1]) ** 2) ** 0.5
-    return dist <= self.__attack_range
+
+    self_rect = pygame.Rect(self.__x, self.__y, Var.DEFAULT_CHARACTER_SIZE[0],
+                            Var.DEFAULT_CHARACTER_SIZE[1])
+    other_rect = pygame.Rect(other.__x, other.__y,
+                             Var.DEFAULT_CHARACTER_SIZE[0],
+                             Var.DEFAULT_CHARACTER_SIZE[1])
+
+    return dist <= self.__attack_range or self_rect.colliderect(other_rect)
 
   def attack(self, other: 'Character') -> None:
     """
