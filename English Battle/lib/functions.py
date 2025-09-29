@@ -10,6 +10,7 @@ from pygame.mixer import Channel
 
 from font import FONTS
 from lib.color import Color
+from lib.combat import ScoreSystem
 from lib.core import Zombie, Hero
 from lib.level import (Level, TutorialLevel, TutorialCombatLevel,
                        TutorialMoveLevel, TutorialHealLevel, LevelType,
@@ -147,6 +148,14 @@ def draw_game(lvl: Level, window: Surface, hero: Hero,
     combat_modal.draw(window)
   FeedbackBox.get_instance().draw(window)
   lvl.draw_pause_menu(window)
+
+  if Var.score_system:
+    font = pygame.font.Font(FONTS.get("press-start-2p"), 12)
+    score_text = font.render(f"{Var.score_system.get_score()}", True,
+                             (255, 255, 255))
+    window.blit(score_text,
+                (Var.DEFAULT_WINDOW_SIZE[0] - score_text.get_width() - 24, 16))
+
   pygame.display.flip()
 
 
@@ -202,6 +211,7 @@ def main_menu(window: Surface) -> None:
           idx_selected = (idx_selected + 1) % len(options)
         elif event.key == pygame.K_RETURN:
           if options[idx_selected] == "Nuevo juego":
+            init_score_system()
             Var.current_level_idx = level_select_menu(window, bg_img)
             if Var.current_level_idx is None:
               selected_level = False
@@ -214,6 +224,14 @@ def main_menu(window: Surface) -> None:
             close_game()
     if selected_level:
       menu_active = False
+
+
+def init_score_system() -> ScoreSystem:
+  """
+  Initializes the score system if not already done.
+  """
+  Var.score_system = ScoreSystem()
+  return Var.score_system
 
 
 def setup_level(level_idx: int) -> tuple[Hero, Level, list[Zombie]]:

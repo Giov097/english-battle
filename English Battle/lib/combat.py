@@ -13,11 +13,30 @@ from pygame.font import FontType, Font
 from lib.color import Color
 
 
+class ScoreSystem:
+  """
+  Score system for the player
+  """
+
+  def __init__(self):
+    self.__score = 0
+
+  def add_points(self, base_points: int, multiplier: float = 1.0):
+    self.__score += int(base_points * multiplier)
+
+  def get_score(self) -> int:
+    return self.__score
+
+  def reset(self):
+    self.__score = 0
+
+
 class Combat:
   """Class to manage combat encounters with grammar questions."""
 
   def __init__(self, hero: 'hero', enemy: 'Character', current_type: str,
-      questions_set: list[dict[str, list[str]]]) -> None:
+      questions_set: list[dict[str, list[str]]],
+      score_system: 'ScoreSystem' = None) -> None:
     """
     Initializes the Combat instance.
     :param hero: The hero character.
@@ -25,6 +44,7 @@ class Combat:
     :param current_type: The type of combat (e.g., "word_ordering", "multiple_choice", "fill_in_the_blank").
     :param questions_set: List of questions for the combat.
     """
+    from lib.var import Var
     self.__hero: 'hero' = hero
     self.__enemy: 'Character' = enemy
     self.__combat_type: str = current_type
@@ -33,6 +53,7 @@ class Combat:
     self.__current_answer: str | None = None
     self.__last_question: str | None = None
     self.__questions_set = questions_set if questions_set is not None else []
+    self.__score_system = score_system if score_system else Var.score_system
 
   def generate_question(self) -> tuple[str | None, list[
     dict[str, list[str]]] | None, str | None] | str | None:
@@ -134,6 +155,10 @@ class Combat:
     if self.check_answer(player_answer):
       self.__hero.attack(self.__enemy)
       result = "¡Correcto! Atacas al enemigo."
+      if not self.__enemy.is_alive():
+        base_points = 100
+        self.__score_system.add_points(base_points)
+
     else:
       self.__enemy.attack(self.__hero)
       result = "Incorrecto. El enemigo te ataca."
@@ -142,6 +167,12 @@ class Combat:
     else:
       self.generate_question()
     return result
+
+  def get_score(self) -> int:
+    return self.__score_system.get_score()
+
+  def reset_score(self):
+    self.__score_system.reset()
 
   def get_current_question(self) -> str | tuple[str, list[str], str] | None:
     """

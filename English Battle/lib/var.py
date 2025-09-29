@@ -505,3 +505,6 @@ class Var:
 
   level: 'Level'
   character: 'Hero'
+
+
+  score_system = None
